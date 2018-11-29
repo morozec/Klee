@@ -24,12 +24,15 @@ namespace Klee
         private const int MAX_GHOST_DIST = 1760;
         private const int RELEASE_DIST = 1600;
         private const int STUN_DELAY = 20;
+        private const int VISIBLE_DIST = 2200;
+        private const int GHOST_SPEED = 400;
         private const double EPS = 1E-3;
 
         private const int MIN_GHOST_DIST_SQR = MIN_GHOST_DIST * MIN_GHOST_DIST;
         private const int MAX_GHOST_DIST_SQR = MAX_GHOST_DIST * MAX_GHOST_DIST;
         private const int RELEASE_DIST_SQR = RELEASE_DIST * RELEASE_DIST;
 
+        private static IList<Entity> _ghosts = new List<Entity>();
 
         static void Main(string[] args)
         {
@@ -90,6 +93,8 @@ namespace Klee
                     }
                 }
 
+                UpdateGhosts(myBusters, ghosts);
+
                 Entity bustGhost = null;
                 for (int i = 0; i < bustersPerPlayer; i++)
                 {
@@ -133,12 +138,6 @@ namespace Klee
                             continue;
                         }
                         
-                        if (!ghosts.Any())//no ghosts. move random
-                        {
-                            MoveToRandomPosition();
-                            continue;
-                        }
-
                         var trapGhost = GetTrapGhost(buster, ghosts, true);
                         if (trapGhost != null)
                         {
@@ -153,11 +152,24 @@ namespace Klee
                             continue;
                         }
 
+                        var zeroStaminaGhost = _ghosts.Where(g => g.State == 0)
+                            .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
+                        if (zeroStaminaGhost != null)
+                        {
+                            Console.WriteLine($"MOVE {zeroStaminaGhost.Point.X} {zeroStaminaGhost.Point.Y}");
+                            continue;
+                        }
+
                          // move to trap point
-                        var movingPoint = GetBustTrapPoint(buster, bustGhost, basePoint);
-                        Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
-                        
-                        
+                        if (bustGhost != null)
+                        {
+                            var movingPoint = GetBustTrapPoint(buster, bustGhost, basePoint);
+                            Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
+                            continue;
+                        }
+
+                        MoveToRandomPosition();
+
                     }
                     else if (i == 2)
                     {
@@ -183,6 +195,7 @@ namespace Klee
                             _isRadarUsed = true;
                             continue;
                         }
+                        
 
                         //move to opp catcher
                         var oppCatcher = oppBusters.SingleOrDefault(b => b.Id == _oppCatcherId);
@@ -263,6 +276,53 @@ namespace Klee
 
             var movingPoint = MathHelper.GetMiddlePoint(minVector.End, maxVector.End);
             return movingPoint;
+        }
+
+        private static void UpdateGhosts(IList<Entity> myBusters, IList<Entity> ghosts)
+        {
+            //Remove
+            for (var i = _ghosts.Count - 1; i >= 0; i--)
+            {
+                var ghost = _ghosts[i];
+                if (ghosts.Any(g => g.Id == ghost.Id)) continue;
+
+                var isVisible = false;
+                foreach (var buster in myBusters)
+                {
+                    var dist = MathHelper.GetSqrDist(buster, ghost);
+                    if (dist <= (VISIBLE_DIST - GHOST_SPEED) * (VISIBLE_DIST - GHOST_SPEED))
+                    {
+                        isVisible = true;
+                        break;
+                    }
+                }
+
+                if (isVisible) _ghosts.RemoveAt(i);
+            }
+
+            //Update and Add
+            foreach (var ghost in ghosts)
+            {
+                var index = -1;
+                for (var i = 0; i < _ghosts.Count; ++i)
+                {
+                    if (_ghosts[i].Id == ghost.Id)
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+
+                if (index >= 0)
+                {
+                    _ghosts[index] = ghost;
+                }
+                else
+                {
+                    _ghosts.Add(ghost);
+                }
+
+            }
         }
 
 
