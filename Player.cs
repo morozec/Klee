@@ -102,12 +102,6 @@ namespace Klee
 
                     if (i == 0)
                     {
-                        if (!ghosts.Any())//no ghosts. move random
-                        {
-                            MoveToRandomPosition();
-                            continue;
-                        }
-
                         bustGhost = GetBustGhost(buster, ghosts);
                         if (bustGhost != null) //got ghost to bust
                         {
@@ -116,10 +110,24 @@ namespace Klee
                         }
                         
                         //move to bust point
-                        bustGhost = ghosts.OrderBy(g => MathHelper.GetSqrDist(buster, g)).First();
-                        var movingPoint = GetBustTrapPoint(buster, bustGhost, basePoint);
-                        Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
-                        
+                        if (ghosts.Any())
+                        {
+                            bustGhost = ghosts.OrderBy(g => MathHelper.GetSqrDist(buster, g)).First();
+                            var movingPoint = GetBustTrapPoint(buster, bustGhost, basePoint);
+                            Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
+                            continue;
+                        }
+
+                        var possibleGhost = _ghosts.OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
+                        if (possibleGhost != null)
+                        {
+                            var movingPoint = GetBustTrapPoint(buster, possibleGhost, basePoint);
+                            Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
+                            continue;
+                        }
+
+                        MoveToRandomPosition();
+
                     }
                     else if (i == 1)
                     {
