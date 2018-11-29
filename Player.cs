@@ -139,22 +139,37 @@ namespace Klee
                             continue;
                         }
 
-                        var trapGhost = GetTrapGhost(buster, ghosts);
+                        var trapGhost = GetTrapGhost(buster, ghosts, true);
                         if (trapGhost != null)
                         {
                             Console.WriteLine($"TRAP {trapGhost.Id}");
+                            continue;
                         }
-                        else // move to trap point
+
+                        trapGhost = GetTrapGhost(buster, ghosts, false);
+                        if (trapGhost != null)
                         {
-                            var movingPoint = GetBustTrapPoint(buster, bustGhost, basePoint);
-                            Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
+                            Console.WriteLine($"MOVE {trapGhost.Point.X} {trapGhost.Point.Y}");
+                            continue;
                         }
+
+                         // move to trap point
+                        var movingPoint = GetBustTrapPoint(buster, bustGhost, basePoint);
+                        Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
+                        
                         
                     }
                     else if (i == 2)
                     {
                         var stunOppBuster = oppBusters.SingleOrDefault(b =>
-                            b.State == 1 && MathHelper.GetSqrDist(buster, b) <= MAX_GHOST_DIST_SQR);
+                            (b.State == 1 || b.State == 3) && MathHelper.GetSqrDist(buster, b) <= MAX_GHOST_DIST_SQR);
+
+                        if (stunOppBuster == null)
+                        {
+                            stunOppBuster = oppBusters.SingleOrDefault(b =>
+                                b.State == 4 && MathHelper.GetSqrDist(buster, b) <= MAX_GHOST_DIST_SQR);
+                        }
+
                         if (_currStunDelay == 0 && stunOppBuster != null)
                         {
                             Console.WriteLine($"STUN {stunOppBuster.Id}");
@@ -213,12 +228,13 @@ namespace Klee
             Console.WriteLine($"MOVE {x} {y}");
         }
 
-        private static Entity GetTrapGhost(Entity buster, IList<Entity> ghosts)
+        private static Entity GetTrapGhost(Entity buster, IList<Entity> ghosts, bool considerDist)
         {
-            return ghosts.FirstOrDefault(g => g.State == 0 &&
-                                              MathHelper.GetSqrDist(buster, g) >= MIN_GHOST_DIST_SQR &&
-                                              MathHelper.GetSqrDist(buster, g) <= MAX_GHOST_DIST_SQR);
+            return ghosts.FirstOrDefault(g => g.State == 0 && (!considerDist ||
+                                                               MathHelper.GetSqrDist(buster, g) >= MIN_GHOST_DIST_SQR &&
+                                                               MathHelper.GetSqrDist(buster, g) <= MAX_GHOST_DIST_SQR));
         }
+
 
         private static Entity GetBustGhost(Entity buster, IList<Entity> ghosts)
         {
