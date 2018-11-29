@@ -145,18 +145,20 @@ namespace Klee
                             continue;
                         }
 
-                        trapGhost = GetTrapGhost(buster, ghosts, false);
-                        if (trapGhost != null)
-                        {
-                            Console.WriteLine($"MOVE {trapGhost.Point.X} {trapGhost.Point.Y}");
-                            continue;
-                        }
+                        //trapGhost = GetTrapGhost(buster, ghosts, false);
+                        //if (trapGhost != null)
+                        //{
+                        //    var movingPoint = GetBustTrapPoint(buster, bustGhost, basePoint);
+                        //    Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
+                        //    continue;
+                        //}
 
                         var zeroStaminaGhost = _ghosts.Where(g => g.State == 0)
                             .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
                         if (zeroStaminaGhost != null)
                         {
-                            Console.WriteLine($"MOVE {zeroStaminaGhost.Point.X} {zeroStaminaGhost.Point.Y}");
+                            var movingPoint = GetBustTrapPoint(buster, zeroStaminaGhost, basePoint);
+                            Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
                             continue;
                         }
 
@@ -263,10 +265,10 @@ namespace Klee
         {
             var vector = new Vector(ghost.Point, buster.Point);
             if (Math.Abs(vector.Length) < EPS)
-                vector.End = new Point(WIDTH / 2, HEIGHT / 2);
-            if (Math.Abs(vector.Length) < EPS)
                 vector.End = basePoint;
-            
+            if (Math.Abs(vector.Length) < EPS)
+                vector.End = new Point(WIDTH / 2, HEIGHT / 2);
+           
 
             var minVectorCoeff = MIN_GHOST_DIST * 1d / vector.Length;
             var minVector = MathHelper.GetMultVector(vector, minVectorCoeff);
