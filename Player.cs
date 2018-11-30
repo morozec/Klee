@@ -147,9 +147,11 @@ namespace Klee
 
                         //if (hunterBustingGhost == null)
                         hunterBustingGhost = _ghosts
-                                .Where(g => g.State > 0 && 
-                                            MathHelper.GetSqrDist(g.Point, _myBasePoint) <
-                                            MathHelper.GetSqrDist(g.Point, _oppBasePoint))
+                                .Where(g => g.State > 0 
+                                            //&& 
+                                            //MathHelper.GetSqrDist(g.Point, _myBasePoint) <
+                                            //MathHelper.GetSqrDist(g.Point, _oppBasePoint)
+                                            )
                                 .OrderBy(g => GetBustTime(buster, g)).FirstOrDefault();
 
                         if (hunterBustingGhost != null &&
@@ -159,7 +161,9 @@ namespace Klee
                             notStallingGhosts.Add(hunterBustingGhost);
                             var sqrDist = MathHelper.GetSqrDist(buster, hunterBustingGhost);
                             if (sqrDist >= MIN_GHOST_DIST_SQR &&
-                                sqrDist <= MAX_GHOST_DIST_SQR)
+                                sqrDist <= MAX_GHOST_DIST_SQR &&
+                                MathHelper.GetSqrDist(hunterBustingGhost.Point, _myBasePoint) < 
+                                MathHelper.GetSqrDist(hunterBustingGhost.Point, _oppBasePoint))
                             {
                                 Console.WriteLine($"BUST {hunterBustingGhost.Id}");
                                 isBusting = true;
