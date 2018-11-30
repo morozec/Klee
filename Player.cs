@@ -101,6 +101,7 @@ namespace Klee
                 UpdateGhosts(myBusters, ghosts);
 
                 var notStallingGhosts = new List<Entity>();
+                Entity hunterBustingGhost = null;
                 for (int i = 0; i < bustersPerPlayer; i++)
                 {
                     var buster = myBusters[i];
@@ -108,25 +109,25 @@ namespace Klee
                     if (i == 0)
                     {
                         //истощаем ВИДИМОГО призрака (или движемся к нему, если далеко)
-                        var bustGhost = ghosts
+                        hunterBustingGhost = ghosts
                             .Where(g => g.State > 0 && 
                                         MathHelper.GetSqrDist(g.Point, _myBasePoint) <
                                         MathHelper.GetSqrDist(g.Point, _oppBasePoint))
                             .OrderBy(g => GetBustTime(buster, g)).FirstOrDefault();
 
-                        if (bustGhost != null && StartBustGhots(bustGhost, buster, myBusters[1]))
+                        if (hunterBustingGhost != null && StartBustGhots(hunterBustingGhost, buster, myBusters[1]))
                         {
-                            notStallingGhosts.Add(bustGhost);
-                            var sqrDist = MathHelper.GetSqrDist(buster, bustGhost);
+                            notStallingGhosts.Add(hunterBustingGhost);
+                            var sqrDist = MathHelper.GetSqrDist(buster, hunterBustingGhost);
                             if (sqrDist >= MIN_GHOST_DIST_SQR &&
                                 sqrDist <= MAX_GHOST_DIST_SQR)
                             {
-                                Console.WriteLine($"BUST {bustGhost.Id}");
+                                Console.WriteLine($"BUST {hunterBustingGhost.Id}");
                             }
                             else
                             {
-                                var movingPoint = GetBustTrapPointNew(buster, bustGhost, false);
-                                Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y} {bustGhost.Id}");
+                                var movingPoint = GetBustTrapPointNew(buster, hunterBustingGhost, false);
+                                Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y} {hunterBustingGhost.Id}");
                             }
                             continue;
                         }
@@ -212,6 +213,23 @@ namespace Klee
                             continue;
                         }
 
+                        if (hunterBustingGhost != null)//идем ловить того, на кого охотится hunter
+                        {
+                            var bustingTime = hunterBustingGhost.State;
+
+                            var trapPoint = GetBustTrapPointNew(buster, hunterBustingGhost, true);
+                            var trapPointDist = MathHelper.GetDist(buster.Point, trapPoint);
+                            var trapTime = Convert.ToInt32(Math.Ceiling(trapPointDist / BUSTER_SPEED));
+
+                            if (bustingTime <= 2 || trapTime >= bustingTime)
+                            {
+                                notStallingGhosts.Add(hunterBustingGhost);
+                                Console.WriteLine($"MOVE {trapPoint.X} {trapPoint.Y}");
+                                continue;
+                            }
+                        }
+
+
                         var stallGhost = GetStallingGhost(buster, notStallingGhosts, myBusters, oppBusters);
                         if (stallGhost != null) //загоняем призраков
                         {
@@ -283,8 +301,8 @@ namespace Klee
             if (catcher.State == 1) return false;
             var catchPoint = GetBustTrapPointNew(catcher, ghost, false);
             var dist = MathHelper.GetDist(catcher.Point, catchPoint);
-            var catchTime = dist / BUSTER_SPEED;
-            if (catcher.State != 3) catchTime += catcher.Value;
+            var catchTime = Convert.ToInt32(Math.Ceiling(dist / BUSTER_SPEED));
+            if (catcher.State == 2) catchTime += catcher.Value;
 
             var bustTime = GetBustTime(hunter, ghost);
             return catchTime <= bustTime;
