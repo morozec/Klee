@@ -138,6 +138,19 @@ namespace Klee
                             continue;
                         }
 
+                        var moveToBaseGhost = _ghosts.Where(g => g.State == 0 && MathHelper.GetSqrDist(basePoint, g.Point) > RELEASE_DIST_SQR)
+                            .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
+                        if (moveToBaseGhost != null)
+                        {
+                            var vector = new Vector(basePoint, moveToBaseGhost.Point);
+                            var coeff = (vector.Length + 100d) / vector.Length;
+                            var multVector = MathHelper.GetMultVector(vector, coeff);
+                            var movingPoint = multVector.End;
+
+                            Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y} GTB");
+                            continue;
+                        }
+
                         MoveToRandomPosition();
 
                     }
