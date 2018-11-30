@@ -97,7 +97,7 @@ namespace Klee
                 UpdateGhosts(myBusters, ghosts);
 
                 Entity bustGhost = null;
-                var stallingGhosts = new List<Entity>();
+                var notStallingGhosts = new List<Entity>();
                 for (int i = 0; i < bustersPerPlayer; i++)
                 {
                     var buster = myBusters[i];
@@ -108,6 +108,7 @@ namespace Klee
                         bustGhost = ghosts.Where(g => g.State > 0).OrderBy(g => GetBustTime(buster, g)).FirstOrDefault();
                         if (bustGhost != null && StartBustGhots(bustGhost, buster, myBusters[1]))
                         {
+                            notStallingGhosts.Add(bustGhost);
                             if (MathHelper.GetSqrDist(buster, bustGhost) >= MIN_GHOST_DIST_SQR &&
                                 MathHelper.GetSqrDist(buster, bustGhost) <= MAX_GHOST_DIST_SQR)
                             {
@@ -122,12 +123,12 @@ namespace Klee
                         }
 
                         //загоняем призраков
-                        var stallGhost = _ghosts.Where(g => !stallingGhosts.Contains(g) &&
+                        var stallGhost = _ghosts.Where(g => !notStallingGhosts.Contains(g) &&
                                 !IsBustingGhost(g) && MathHelper.GetSqrDist(_basePoint, g.Point) > RELEASE_DIST_SQR)
                             .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
                         if (stallGhost != null)
                         {
-                            stallingGhosts.Add(stallGhost);
+                            notStallingGhosts.Add(stallGhost);
                             var stallPoint = GetStallPoint(stallGhost);
                             Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB0");
                             continue;
@@ -157,6 +158,7 @@ namespace Klee
                         var trapGhost = GetTrapGhost(buster, ghosts, true);
                         if (trapGhost != null)
                         {
+                            notStallingGhosts.Add(trapGhost);
                             Console.WriteLine($"TRAP {trapGhost.Id}");
                             continue;
                         }
@@ -166,6 +168,7 @@ namespace Klee
                             .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
                         if (zeroStaminaGhost != null)
                         {
+                            notStallingGhosts.Add(zeroStaminaGhost);
                             var movingPoint = GetBustTrapPoint(buster, zeroStaminaGhost);
                             Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
                             continue;
@@ -181,17 +184,18 @@ namespace Klee
 
                             if (bustTime <= trapTime) //идем ловить
                             {
+                                notStallingGhosts.Add(bustGhost);
                                 Console.WriteLine($"MOVE {trapPoint.X} {trapPoint.Y}");
                                 continue;
                             }
                             
-                            var stallGhost = _ghosts.Where(g => !stallingGhosts.Contains(g) &&
+                            var stallGhost = _ghosts.Where(g => !notStallingGhosts.Contains(g) &&
                                     !IsBustingGhost(g) && MathHelper.GetSqrDist(_basePoint, g.Point) >
                                     RELEASE_DIST_SQR)
                                 .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
                             if (stallGhost != null) //загоняем призраков
                             {
-                                stallingGhosts.Add(stallGhost);
+                                notStallingGhosts.Add(stallGhost);
                                 var stallPoint = GetStallPoint(stallGhost);
                                 Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB1");
                                 continue;
@@ -239,14 +243,14 @@ namespace Klee
                         if (stallGhost == null)
                         {
                             stallGhost = _ghosts.Where(g =>
-                                    !stallingGhosts.Contains(g) && !IsBustingGhost(g) &&
+                                    !notStallingGhosts.Contains(g) && !IsBustingGhost(g) &&
                                     MathHelper.GetSqrDist(_basePoint, g.Point) > RELEASE_DIST_SQR)
                                 .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
                         }
 
                         if (stallGhost != null)
                         {
-                            stallingGhosts.Add(stallGhost);
+                            notStallingGhosts.Add(stallGhost);
                             var stallPoint = GetStallPoint(stallGhost);
                             Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB2");
                             continue;
