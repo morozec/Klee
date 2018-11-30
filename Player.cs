@@ -21,7 +21,7 @@ namespace Klee
         private const int MAX_GHOST_DIST = 1760;
         private const int RELEASE_DIST = 1600;
         private const int STUN_DELAY = 20;
-        private const int VISIBLE_DIST = 2200;
+        private const int VISIBLE_RANGE = 2200;
         private const int BUSTER_SPEED = 800;
         private const int GHOST_SPEED = 400;
         private const int GHOST_VISIBLE_RANGE = 2200;
@@ -34,7 +34,8 @@ namespace Klee
 
         private static IList<Entity> _ghosts = new List<Entity>();
         private static IList<Entity> _prevStepGhosts = new List<Entity>();
-        private static Point _basePoint = null;
+        private static Point _myBasePoint = null;
+        private static Point _oppBasePoint = null;
 
         static void Main(string[] args)
         {
@@ -46,7 +47,8 @@ namespace Klee
                     .ReadLine()); // if this is 0, your base is on the top left of the map, if it is one, on the bottom right
             var oppTeamId = myTeamId == 0 ? 1 : 0;
 
-            _basePoint = myTeamId == 0 ? new Point(0, 0) : new Point(WIDTH - 1, HEIGHT - 1);
+            _myBasePoint = myTeamId == 0 ? new Point(0, 0) : new Point(WIDTH - 1, HEIGHT - 1);
+            _oppBasePoint = myTeamId == 0 ? new Point(WIDTH - 1, HEIGHT - 1) : new Point(0, 0);
             var addOppId = myTeamId == 0 ? 3 : 0;
 
             // game loop
@@ -107,7 +109,12 @@ namespace Klee
                     if (i == 0)
                     {
                         //истощаем ВИДИМОГО призрака (или движемся к нему, если далеко)
-                        bustGhost = ghosts.Where(g => g.State > 0).OrderBy(g => GetBustTime(buster, g)).FirstOrDefault();
+                        bustGhost = ghosts
+                            .Where(g => g.State > 0 && 
+                                        MathHelper.GetSqrDist(g.Point, _myBasePoint) <
+                                        MathHelper.GetSqrDist(g.Point, _oppBasePoint))
+                            .OrderBy(g => GetBustTime(buster, g)).FirstOrDefault();
+
                         if (bustGhost != null && StartBustGhots(bustGhost, buster, myBusters[1]))
                         {
                             notStallingGhosts.Add(bustGhost);
@@ -142,7 +149,7 @@ namespace Klee
                     {
                         if (buster.State == 1) //carrying a ghost
                         {
-                            var baseSqrDist = MathHelper.GetSqrDist(buster.Point, _basePoint);
+                            var baseSqrDist = MathHelper.GetSqrDist(buster.Point, _myBasePoint);
                             if (baseSqrDist <= RELEASE_DIST_SQR)
                             {
                                 Console.WriteLine("RELEASE");
@@ -150,7 +157,7 @@ namespace Klee
                             }
                             else //move to base
                             {
-                                Console.WriteLine($"MOVE {_basePoint.X} {_basePoint.Y}");
+                                Console.WriteLine($"MOVE {_myBasePoint.X} {_myBasePoint.Y}");
                             }
                             continue;
                         }
@@ -216,34 +223,23 @@ namespace Klee
                             continue;
                         }
 
-                        if (!_isRadarUsed && !ghosts.Any() && _caughtGhosts >= 2)//TODO: bad if
+                        var oppCatcher = oppBusters.SingleOrDefault(b => b.Id == 1 + addOppId);
+                        if (!_isRadarUsed && !ghosts.Any() && _caughtGhosts >= 2 && oppCatcher != null && oppCatcher.State == 2)//TODO: bad if
                         {
                             Console.WriteLine("RADAR");
                             _isRadarUsed = true;
                             continue;
                         }
-                       
-                        var oppHunter = oppBusters.SingleOrDefault(b => b.Id == 0 + addOppId);
-                        var oppCatcher = oppBusters.SingleOrDefault(b => b.Id == 1 + addOppId);
-                        var oppSupport = oppBusters.SingleOrDefault(b => b.Id == 2 + addOppId);
                         
                         if (oppCatcher != null) //move to opp catcher
                         {
                             Console.WriteLine($"MOVE {oppCatcher.Point.X} {oppCatcher.Point.Y}");
                             continue;
                         }
-                        
-                        var stallGhost = GetStallingGhost(buster, notStallingGhosts, myBusters, oppBusters);
-                        if (stallGhost != null)
-                        {
-                            notStallingGhosts.Add(stallGhost);
-                            var stallPoint = GetStallPoint(stallGhost);
-                            Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB2");
-                            continue;
-                        }
 
-
-                        MoveToRandomPosition();
+                        var waitCatcherX = myTeamId == 0 ? WIDTH - VISIBLE_RANGE : VISIBLE_RANGE;
+                        var waitCatcherY = myTeamId == 0 ? HEIGHT - VISIBLE_RANGE : VISIBLE_RANGE;
+                        Console.WriteLine($"MOVE {waitCatcherX} {waitCatcherY}");
                     }
 
 
@@ -259,10 +255,13 @@ namespace Klee
         private static Entity GetStallingGhost(Entity buster, IList<Entity> notStallingGhosts, IList<Entity> myBuster, IList<Entity> oppBusters)
         {
             return _ghosts.Where(g => !notStallingGhosts.Contains(g) &&
-                                      !IsBustingGhost(g) &&
+                                      (!IsBustingGhost(g) ||
+                                       (buster.Id == 0 || buster.Id == 3) && !oppBusters.Any(b =>
+                                           b.State == 4 && MathHelper.GetSqrDist(b, g) >= MIN_GHOST_DIST_SQR &&
+                                           MathHelper.GetSqrDist(b, g) <= MAX_GHOST_DIST_SQR)) &&
                                       !myBuster.Any(b => b.State == 2 && MathHelper.GetSqrDist(b, g) < EPS) &&
                                       !oppBusters.Any(b => b.State == 2 && MathHelper.GetSqrDist(b, g) < EPS) &&
-                                      MathHelper.GetSqrDist(_basePoint, g.Point) > RELEASE_DIST_SQR)
+                                      MathHelper.GetSqrDist(_myBasePoint, g.Point) > RELEASE_DIST_SQR)
                 .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
         }
 
@@ -280,7 +279,7 @@ namespace Klee
 
         private static Point GetStallPoint(Entity ghost)
         {
-            var vector = new Vector(_basePoint, ghost.Point);
+            var vector = new Vector(_myBasePoint, ghost.Point);
             var coeff = (vector.Length + 800d) / vector.Length;
             var multVector = MathHelper.GetMultVector(vector, coeff);
             return multVector.End;
@@ -322,7 +321,7 @@ namespace Klee
             }
             else if (dist < MIN_GHOST_DIST)
             {
-                var vector = new Vector(ghost.Point, _basePoint);
+                var vector = new Vector(ghost.Point, _myBasePoint);
                 if (Math.Abs(vector.Length) < EPS)
                     vector.End = new Point(WIDTH / 2, HEIGHT / 2);
 
@@ -385,7 +384,7 @@ namespace Klee
 
             var vector = new Vector(ghost.Point, buster.Point);
             if (Math.Abs(vector.Length) < EPS)
-                vector.End = _basePoint;
+                vector.End = _myBasePoint;
             if (Math.Abs(vector.Length) < EPS)
                 vector.End = new Point(WIDTH / 2, HEIGHT / 2);
 
@@ -414,7 +413,7 @@ namespace Klee
                 foreach (var buster in myBusters)
                 {
                     var dist = MathHelper.GetSqrDist(buster, ghost);
-                    if (dist <= (VISIBLE_DIST - GHOST_SPEED) * (VISIBLE_DIST - GHOST_SPEED))
+                    if (dist <= (VISIBLE_RANGE - GHOST_SPEED) * (VISIBLE_RANGE - GHOST_SPEED))
                     {
                         isVisible = true;
                         break;
