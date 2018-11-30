@@ -9,10 +9,6 @@ namespace Klee
 {
     class Player
     {
-        private static int _oppHunterId = -7777;
-        private static int _oppCatcherId = -7777;
-        private static int _oppSupportId = -7777;
-        
         private static bool _isRadarUsed = false;
         private static int _currStunDelay = 0;
         private static int _caughtGhosts = 0;
@@ -47,6 +43,7 @@ namespace Klee
             var oppTeamId = myTeamId == 0 ? 1 : 0;
 
             var basePoint = myTeamId == 0 ? new Point(0, 0) : new Point(WIDTH - 1, HEIGHT - 1);
+            var addOppId = myTeamId == 0 ? 3 : 0;
 
             // game loop
             while (true)
@@ -223,54 +220,22 @@ namespace Klee
 
 
                         //move to opp catcher
-                        var oppCatcher = oppBusters.SingleOrDefault(b => b.Id == _oppCatcherId);
-                        if (oppCatcher == null)
-                        {
-                            oppCatcher = oppBusters.SingleOrDefault(b => b.State == 1 || b.State == 3);
-                        }
-                        if (oppCatcher == null)
-                        {
-                            oppCatcher = oppBusters.SingleOrDefault(b =>
-                                b.Id == -7777 && _oppHunterId >= 0 && _oppSupportId >= 0);
-                        }
-
+                        var oppCatcher = oppBusters.SingleOrDefault(b => b.Id == 1 + addOppId);
                         if (oppCatcher != null)
                         {
-                            _oppCatcherId = oppCatcher.Id;
                             Console.WriteLine($"MOVE {oppCatcher.Point.X} {oppCatcher.Point.Y}");
                             continue;
                         }
 
                         //move to opp hunter
-                        var oppHunter = oppBusters.SingleOrDefault(b => b.Id == _oppHunterId);
-                        if (oppHunter == null)
-                        {
-                            oppHunter = oppBusters.SingleOrDefault(b => b.State == 4);
-                        }
-                        if (oppHunter == null)
-                        {
-                            oppHunter = oppBusters.SingleOrDefault(b =>
-                                b.Id == -7777 &&  _oppCatcherId >= 0 && _oppSupportId >= 0);
-                        }
-
+                        var oppHunter = oppBusters.SingleOrDefault(b => b.Id == 0 + addOppId);
                         if (oppHunter != null)
                         {
-                            _oppHunterId = oppHunter.Id;
                             Console.WriteLine($"MOVE {oppHunter.Point.X} {oppHunter.Point.Y}");
                             continue;
                         }
 
-                        var oppSupport = oppBusters.SingleOrDefault(b => b.Id == _oppSupportId);
-                        if (oppSupport == null)
-                        {
-                            oppSupport = oppBusters.SingleOrDefault(b =>
-                                b.Id == -7777 && _oppCatcherId >= 0 && _oppHunterId >= 0);
-                        }
-
-                        if (oppSupport != null)
-                        {
-                            _oppSupportId = oppSupport.Id;
-                        }
+                        var oppSupport = oppBusters.SingleOrDefault(b => b.Id == 2 + addOppId);
 
                         MoveToRandomPosition();
                     }
