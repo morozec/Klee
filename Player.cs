@@ -130,8 +130,8 @@ namespace Klee
 
                     if (i == 0)
                     {
-                        //истощаем ВИДИМОГО призрака (или движемся к нему, если далеко)
-                        hunterBustingGhost = ghosts
+                        //истощаем призрака (или движемся к нему, если далеко)
+                        hunterBustingGhost = _ghosts
                             .Where(g => g.State > 0 && 
                                         MathHelper.GetSqrDist(g.Point, _myBasePoint) <
                                         MathHelper.GetSqrDist(g.Point, _oppBasePoint))
@@ -301,7 +301,7 @@ namespace Klee
                         }
 
                         var oppCatcher = oppBusters.SingleOrDefault(b => b.Id == 1 + addOppId);
-                        if (!_isRadarUsed && !ghosts.Any() && _caughtGhosts >= 2 && oppCatcher != null && oppCatcher.State == 2)//TODO: bad if
+                        if (!_isRadarUsed && !_ghosts.Any() && _caughtGhosts >= 2 && oppCatcher != null && oppCatcher.State == 2)//TODO: bad if
                         {
                             Console.WriteLine("RADAR");
                             _isRadarUsed = true;
