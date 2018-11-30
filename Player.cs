@@ -121,7 +121,8 @@ namespace Klee
                         }
 
                         //загоняем призраков
-                        var stallGhost = _ghosts.Where(g => MathHelper.GetSqrDist(_basePoint, g.Point) > RELEASE_DIST_SQR)
+                        var stallGhost = _ghosts.Where(g =>
+                                !IsBustingGhost(g) && MathHelper.GetSqrDist(_basePoint, g.Point) > RELEASE_DIST_SQR)
                             .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
                         if (stallGhost != null)
                         {
@@ -179,18 +180,20 @@ namespace Klee
                             if (bustTime <= trapTime) //идем ловить
                             {
                                 Console.WriteLine($"MOVE {trapPoint.X} {trapPoint.Y}");
+                                continue;
                             }
-                            else //загоняем призраков
+                            
+                            var stallGhost = _ghosts.Where(g =>
+                                    !IsBustingGhost(g) && MathHelper.GetSqrDist(_basePoint, g.Point) >
+                                    RELEASE_DIST_SQR)
+                                .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
+                            if (stallGhost != null) //загоняем призраков
                             {
-                                var stallGhost = _ghosts.Where(g => MathHelper.GetSqrDist(_basePoint, g.Point) > RELEASE_DIST_SQR)
-                                    .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
-                                if (stallGhost != null)
-                                {
-                                    var stallPoint = GetStallPoint(stallGhost);
-                                    Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB1");
-                                }
+                                var stallPoint = GetStallPoint(stallGhost);
+                                Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB1");
+                                continue;
                             }
-                            continue;
+                            
                         }
 
                         MoveToRandomPosition();
