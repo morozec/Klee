@@ -108,7 +108,7 @@ namespace Klee
                     {
                         //истощаем ВИДИМОГО призрака (или движемся к нему, если далеко)
                         bustGhost = ghosts.Where(g => g.State > 0).OrderBy(g => GetBustTime(buster, g)).FirstOrDefault();
-                        if (bustGhost != null && (buster.State <= BUST_STAMINA || StartBustGhots(bustGhost, buster, myBusters[1])))
+                        if (bustGhost != null && StartBustGhots(bustGhost, buster, myBusters[1]))
                         {
                             notStallingGhosts.Add(bustGhost);
                             var sqrDist = MathHelper.GetSqrDist(buster, bustGhost);
