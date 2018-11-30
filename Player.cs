@@ -100,7 +100,6 @@ namespace Klee
 
                 UpdateGhosts(myBusters, ghosts);
 
-                Entity bustGhost = null;
                 var notStallingGhosts = new List<Entity>();
                 for (int i = 0; i < bustersPerPlayer; i++)
                 {
@@ -109,7 +108,7 @@ namespace Klee
                     if (i == 0)
                     {
                         //истощаем ВИДИМОГО призрака (или движемся к нему, если далеко)
-                        bustGhost = ghosts
+                        var bustGhost = ghosts
                             .Where(g => g.State > 0 && 
                                         MathHelper.GetSqrDist(g.Point, _myBasePoint) <
                                         MathHelper.GetSqrDist(g.Point, _oppBasePoint))
@@ -182,30 +181,44 @@ namespace Klee
                             continue;
                         }
 
-                        if (bustGhost != null)
+                        var bustingGhosts = ghosts.Where(IsBustingGhost);
+                        Entity minTrapTimeGhost = null;
+                        Point minTrapTimePoint = null;
+                        var minTime = int.MaxValue;
+                        foreach (var bg in bustingGhosts)
                         {
-                            var bustTime = GetBustTime(myBusters[0], bustGhost);
+                            var bustingTime = IsDoubleBustingGhost(bg)
+                                ? Convert.ToInt32(Math.Ceiling(bg.State / 2d))
+                                : bg.State;
 
-                            var trapPoint = GetBustTrapPointNew(buster, bustGhost, true);
+                            var trapPoint = GetBustTrapPointNew(buster, bg, true);
                             var trapPointDist = MathHelper.GetDist(buster.Point, trapPoint);
                             var trapTime = Convert.ToInt32(Math.Ceiling(trapPointDist / BUSTER_SPEED));
 
-                            if (bustTime <= trapTime) //идем ловить
+                            if (trapTime < bustingTime) continue;
+
+                            if (trapTime < minTime)
                             {
-                                notStallingGhosts.Add(bustGhost);
-                                Console.WriteLine($"MOVE {trapPoint.X} {trapPoint.Y}");
-                                continue;
+                                minTime = trapTime;
+                                minTrapTimePoint = trapPoint;
+                                minTrapTimeGhost = bg;
                             }
-                            
-                            var stallGhost = GetStallingGhost(buster, notStallingGhosts, myBusters, oppBusters);
-                            if (stallGhost != null) //загоняем призраков
-                            {
-                                notStallingGhosts.Add(stallGhost);
-                                var stallPoint = GetStallPoint(stallGhost);
-                                Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB1");
-                                continue;
-                            }
-                            
+                        }
+
+                        if (minTrapTimeGhost != null) //идем ловить
+                        {
+                            notStallingGhosts.Add(minTrapTimeGhost);
+                            Console.WriteLine($"MOVE {minTrapTimePoint.X} {minTrapTimePoint.Y}");
+                            continue;
+                        }
+
+                        var stallGhost = GetStallingGhost(buster, notStallingGhosts, myBusters, oppBusters);
+                        if (stallGhost != null) //загоняем призраков
+                        {
+                            notStallingGhosts.Add(stallGhost);
+                            var stallPoint = GetStallPoint(stallGhost);
+                            Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB1");
+                            continue;
                         }
 
                         MoveToRandomPosition();
@@ -466,10 +479,14 @@ namespace Klee
         private static bool IsBustingGhost(Entity ghost)
         {
             var prevG = _prevStepGhosts.SingleOrDefault(g => g.Id == ghost.Id);
-            return prevG != null && prevG.State - ghost.State == 1;
+            return prevG != null && prevG.State - ghost.State >= 1;
         }
 
-
+        private static bool IsDoubleBustingGhost(Entity ghost)
+        {
+            var prevG = _prevStepGhosts.SingleOrDefault(g => g.Id == ghost.Id);
+            return prevG != null && prevG.State - ghost.State == 2;
+        }
 
 
 
