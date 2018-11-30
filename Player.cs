@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 /**
  * Send your busters out into the fog to trap ghosts and bring them home!
@@ -31,11 +32,14 @@ namespace Klee
         private const int MIN_GHOST_DIST_SQR = MIN_GHOST_DIST * MIN_GHOST_DIST;
         private const int MAX_GHOST_DIST_SQR = MAX_GHOST_DIST * MAX_GHOST_DIST;
         private const int RELEASE_DIST_SQR = RELEASE_DIST * RELEASE_DIST;
+        private const int VISIBLE_RANGE_SQR = VISIBLE_RANGE * VISIBLE_RANGE;
 
         private static IList<Entity> _ghosts = new List<Entity>();
         private static IList<Entity> _prevStepGhosts = new List<Entity>();
         private static Point _myBasePoint = null;
         private static Point _oppBasePoint = null;
+        private static int[,] _visibleCount = new int[9, 16];
+
 
         static void Main(string[] args)
         {
@@ -99,6 +103,7 @@ namespace Klee
                 }
 
                 UpdateGhosts(myBusters, ghosts);
+                UpdateVisibleCount(myBusters);
 
                 var notStallingGhosts = new List<Entity>();
                 Entity hunterBustingGhost = null;
@@ -142,7 +147,7 @@ namespace Klee
                             continue;
                         }
 
-                        MoveToRandomPosition();
+                        MoveToMostFogPosition();
 
                     }
                     else if (i == 1)
@@ -239,7 +244,7 @@ namespace Klee
                             continue;
                         }
 
-                        MoveToRandomPosition();
+                        MoveToMostFogPosition();
 
                     }
                     else if (i == 2)
@@ -316,12 +321,23 @@ namespace Klee
             return multVector.End;
         }
 
-        private static void MoveToRandomPosition()
+        private static void MoveToMostFogPosition()
         {
             //TODO!!! Move clever!
-            var x = _rnd.Next(WIDTH);
-            var y = _rnd.Next(HEIGHT);
-            Console.WriteLine($"MOVE {x} {y}");
+
+            var minVisCount = int.MaxValue;
+            var minJ = -1;
+            var minI = -1;
+            for (var i = 0; i < 9; ++i)
+                for (var j = 0; j < 16; ++j)
+                    if (_visibleCount[i, j] < minVisCount)
+                    {
+                        minVisCount = _visibleCount[i, j];
+                        minJ = j;
+                        minI = i;
+                    }
+           
+            Console.WriteLine($"MOVE {minJ * 1000} {minI * 1000}");
         }
 
         private static Entity GetTrapGhost(Entity buster, IList<Entity> ghosts, bool considerDist)
@@ -428,6 +444,19 @@ namespace Klee
 
             var movingPoint = MathHelper.GetMiddlePoint(minVector.End, maxVector.End);
             return movingPoint;
+        }
+
+        private static void UpdateVisibleCount(IList<Entity> myBusters)
+        {
+            foreach (var buster in myBusters)
+                for (var i = 0; i < 9; ++i)
+                    for (var j = 0; j < 16; ++j)
+                    {
+                        var y = 1000 * i;
+                        var x = 1000 * j;
+                        if (MathHelper.GetSqrDist(buster, x, y) <= VISIBLE_RANGE_SQR)
+                            _visibleCount[i, j]++;
+                    }
         }
 
         private static void UpdateGhosts(IList<Entity> myBusters, IList<Entity> ghosts)
@@ -552,6 +581,11 @@ namespace Klee
 
         static class MathHelper
         {
+            public static int GetSqrDist(Entity e, int x, int y)
+            {
+                return (e.Point.X - x) * (e.Point.X - x) + (e.Point.Y - y) * (e.Point.Y - y);
+            }
+
             public static int GetSqrDist(Entity e1, Entity e2)
             {
                 return GetSqrDist(e1.Point, e2.Point);
