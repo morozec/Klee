@@ -300,7 +300,9 @@ namespace Klee
                                            MathHelper.GetSqrDist(b, g) <= MAX_GHOST_DIST_SQR)) &&
                                       !myBuster.Any(b => b.State == 2 && MathHelper.GetSqrDist(b, g) < EPS) &&
                                       !oppBusters.Any(b => b.State == 2 && MathHelper.GetSqrDist(b, g) < EPS) &&
-                                      MathHelper.GetSqrDist(_myBasePoint, g.Point) > RELEASE_DIST_SQR)
+                                      MathHelper.GetSqrDist(_myBasePoint, g.Point) > RELEASE_DIST_SQR &&
+                                      MathHelper.GetSqrDist(g.Point, WIDTH, 0) > 100 * 100 &&
+                                      MathHelper.GetSqrDist(g.Point, 0, HEIGHT) > 100 * 100)
                 .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
         }
 
@@ -595,6 +597,11 @@ namespace Klee
             public static int GetSqrDist(Entity e, int x, int y)
             {
                 return (e.Point.X - x) * (e.Point.X - x) + (e.Point.Y - y) * (e.Point.Y - y);
+            }
+
+            public static int GetSqrDist(Point p, int x, int y)
+            {
+                return (p.X - x) * (p.X - x) + (p.Y - y) * (p.Y - y);
             }
 
             public static int GetSqrDist(Entity e1, Entity e2)
