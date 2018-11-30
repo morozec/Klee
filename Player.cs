@@ -149,12 +149,14 @@ namespace Klee
 
                         //if (hunterBustingGhost == null)
                         hunterBustingGhost = _ghosts
-                                .Where(g => g.State > 0 
+                                .Where(g => g.State > 0
                                             //&& 
                                             //MathHelper.GetSqrDist(g.Point, _myBasePoint) <
                                             //MathHelper.GetSqrDist(g.Point, _oppBasePoint)
                                             )
-                                .OrderBy(g => GetBustTime(buster, g)).FirstOrDefault();
+                                .OrderBy(g => GetBustTime(buster, g) + 
+                                    Convert.ToInt32(Math.Ceiling(MathHelper.GetDist(g.Point, _myBasePoint) / BUSTER_SPEED))).
+                                FirstOrDefault();
 
                         if (hunterBustingGhost != null &&
                             (StartBustGhots(hunterBustingGhost, buster, myBusters[1]) ||
