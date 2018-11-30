@@ -319,9 +319,17 @@ namespace Klee
         private static Point GetStallPoint(Entity ghost)
         {
             var vector = new Vector(_myBasePoint, ghost.Point);
-            var coeff = (vector.Length + 800d) / vector.Length;
-            var multVector = MathHelper.GetMultVector(vector, coeff);
-            return multVector.End;
+            if (Math.Abs(vector.Length) < EPS)
+                vector.Start = new Point(WIDTH / 2, HEIGHT / 2);
+
+            var minVectorCoeff = (vector.Length + MIN_GHOST_DIST * 1d) / vector.Length;
+            var minVector = MathHelper.GetMultVector(vector, minVectorCoeff);
+
+            var maxVectorCoeff = (vector.Length + MAX_GHOST_DIST * 1d) / vector.Length;
+            var maxVector = MathHelper.GetMultVector(vector, maxVectorCoeff);
+
+            var movingPoint = MathHelper.GetMiddlePoint(minVector.End, maxVector.End);
+            return movingPoint;
         }
 
         private static void MoveToMostFogPosition()
@@ -371,14 +379,14 @@ namespace Klee
             }
             else if (dist < MIN_GHOST_DIST)
             {
-                var vector = new Vector(ghost.Point, _myBasePoint);
+                var vector = new Vector(_myBasePoint, ghost.Point);
                 if (Math.Abs(vector.Length) < EPS)
-                    vector.End = new Point(WIDTH / 2, HEIGHT / 2);
+                    vector.Start = new Point(WIDTH / 2, HEIGHT / 2);
 
-                var minVectorCoeff = MIN_GHOST_DIST * 1d / vector.Length;
+                var minVectorCoeff = (vector.Length + MIN_GHOST_DIST * 1d) / vector.Length;
                 var minVector = MathHelper.GetMultVector(vector, minVectorCoeff);
 
-                var maxVectorCoeff = MAX_GHOST_DIST * 1d / vector.Length;
+                var maxVectorCoeff = (vector.Length + MAX_GHOST_DIST * 1d) / vector.Length;
                 var maxVector = MathHelper.GetMultVector(vector, maxVectorCoeff);
 
                 var movingPoint = MathHelper.GetMiddlePoint(minVector.End, maxVector.End);
