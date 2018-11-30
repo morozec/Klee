@@ -176,7 +176,7 @@ namespace Klee
                             }
                             else //move to base
                             {
-                                Console.WriteLine($"MOVE {_myBasePoint.X} {_myBasePoint.Y}");
+                                Console.WriteLine($"MOVE {_myBasePoint.X} {_myBasePoint.Y} Base");
                             }
                             continue;
                         }
@@ -233,7 +233,7 @@ namespace Klee
                         if (minTrapTimeGhost != null) //идем ловить
                         {
                             notStallingGhosts.Add(minTrapTimeGhost);
-                            Console.WriteLine($"MOVE {minTrapTimePoint.X} {minTrapTimePoint.Y}");
+                            Console.WriteLine($"MOVE {minTrapTimePoint.X} {minTrapTimePoint.Y} MTP {minTrapTimeGhost.Id}");
                             continue;
                         }
 
@@ -248,7 +248,7 @@ namespace Klee
                             if (bustingTime <= 2 || trapTime >= bustingTime)
                             {
                                 notStallingGhosts.Add(hunterBustingGhost);
-                                Console.WriteLine($"MOVE {trapPoint.X} {trapPoint.Y}");
+                                Console.WriteLine($"MOVE {trapPoint.X} {trapPoint.Y} HBG");
                                 continue;
                             }
                         }
@@ -536,7 +536,7 @@ namespace Klee
                 foreach (var buster in myBusters)
                 {
                     var dist = MathHelper.GetSqrDist(buster, ghost);
-                    if (dist <= (VISIBLE_RANGE - 1.5 * GHOST_SPEED) * (VISIBLE_RANGE - 1.5 * GHOST_SPEED))
+                    if (dist <= MAX_GHOST_DIST_SQR)
                     {
                         isVisible = true;
                         break;
