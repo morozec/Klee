@@ -25,6 +25,7 @@ namespace Klee
         private const int RELEASE_DIST = 1600;
         private const int STUN_DELAY = 20;
         private const int VISIBLE_DIST = 2200;
+        private const int BUSTER_SPEED = 800;
         private const int GHOST_SPEED = 400;
         private const double EPS = 1E-3;
 
@@ -102,27 +103,40 @@ namespace Klee
 
                     if (i == 0)
                     {
+                        /*
                         bustGhost = GetBustGhost(buster, ghosts);
                         if (bustGhost != null) //got ghost to bust
                         {
                             Console.WriteLine($"BUST {bustGhost.Id}");
                             continue;
                         }
-                        
-                        //move to bust point
-                        if (ghosts.Any())
-                        {
-                            bustGhost = ghosts.OrderBy(g => MathHelper.GetSqrDist(buster, g)).First();
-                            var movingPoint = GetBustTrapPoint(buster, bustGhost, basePoint);
-                            Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
-                            continue;
-                        }
+                        */
 
-                        var possibleGhost = _ghosts.OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
-                        if (possibleGhost != null)
+
+                        /*                       
+                       bustGhost = ghosts.Where(g => g.State > 0).OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
+                       if (bustGhost != null)//move to bust point
+                       {
+                           var movingPoint = GetBustTrapPoint(buster, bustGhost, basePoint);
+                           Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
+                           continue;
+                       }
+                       */
+
+
+                        bustGhost = _ghosts.Where(g => g.State > 0).OrderBy(g => GetBustTime(buster, g, basePoint)).FirstOrDefault();
+                        if (bustGhost != null)
                         {
-                            var movingPoint = GetBustTrapPoint(buster, possibleGhost, basePoint);
-                            Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
+                            if (MathHelper.GetSqrDist(buster, bustGhost) >= MIN_GHOST_DIST_SQR &&
+                                MathHelper.GetSqrDist(buster, bustGhost) <= MAX_GHOST_DIST_SQR)
+                            {
+                                Console.WriteLine($"BUST {bustGhost.Id}");
+                            }
+                            else
+                            {
+                                var movingPoint = GetBustTrapPoint(buster, bustGhost, basePoint);
+                                Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
+                            }
                             continue;
                         }
 
@@ -145,7 +159,7 @@ namespace Klee
                             }
                             continue;
                         }
-                        
+
                         var trapGhost = GetTrapGhost(buster, ghosts, true);
                         if (trapGhost != null)
                         {
@@ -170,7 +184,7 @@ namespace Klee
                             continue;
                         }
 
-                         // move to trap point
+                        // move to trap point
                         if (bustGhost != null)
                         {
                             var movingPoint = GetBustTrapPoint(buster, bustGhost, basePoint);
@@ -205,7 +219,7 @@ namespace Klee
                             _isRadarUsed = true;
                             continue;
                         }
-                        
+
 
                         //move to opp catcher
                         var oppCatcher = oppBusters.SingleOrDefault(b => b.Id == _oppCatcherId);
@@ -235,7 +249,7 @@ namespace Klee
 
                         MoveToRandomPosition();
                     }
-                   
+
 
                     // First: MOVE x y | BUST id
                     // Second: MOVE x y | TRAP id | RELEASE
@@ -276,7 +290,7 @@ namespace Klee
                 vector.End = basePoint;
             if (Math.Abs(vector.Length) < EPS)
                 vector.End = new Point(WIDTH / 2, HEIGHT / 2);
-           
+
 
             var minVectorCoeff = MIN_GHOST_DIST * 1d / vector.Length;
             var minVector = MathHelper.GetMultVector(vector, minVectorCoeff);
@@ -335,6 +349,14 @@ namespace Klee
             }
         }
 
+        private static int GetBustTime(Entity buster, Entity ghost, Point basePoint)
+        {
+            var bustPoint = GetBustTrapPoint(buster, ghost, basePoint);
+            var dist = MathHelper.GetDist(buster.Point, bustPoint);
+            var time = Convert.ToInt32(dist / BUSTER_SPEED);
+            time += ghost.State;
+            return time;
+        }
 
 
 
@@ -342,7 +364,8 @@ namespace Klee
 
 
 
-    class Point
+
+        class Point
         {
             public int X { get; set; }
             public int Y { get; set; }
@@ -399,6 +422,11 @@ namespace Klee
             public static double GetDist(Point p1, Point p2)
             {
                 return Math.Sqrt(GetSqrDist(p1, p2));
+            }
+
+            public static double GetDist(Entity e1, Entity e2)
+            {
+                return GetDist(e1.Point, e2.Point);
             }
 
             public static Vector GetMultVector(Vector v, double coeff)
