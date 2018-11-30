@@ -138,7 +138,7 @@ namespace Klee
                         //    ).OrderBy(g => GetBustTime(buster, g)).FirstOrDefault();
 
                         //if (hunterBustingGhost == null)
-                            hunterBustingGhost = ghosts
+                            hunterBustingGhost = _ghosts
                                 .Where(g => g.State > 0 && 
                                             MathHelper.GetSqrDist(g.Point, _myBasePoint) <
                                             MathHelper.GetSqrDist(g.Point, _oppBasePoint))
