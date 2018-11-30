@@ -124,6 +124,7 @@ namespace Klee
 
                 var notStallingGhosts = new List<Entity>();
                 Entity hunterBustingGhost = null;
+                var isBusting = false;
                 for (int i = 0; i < bustersPerPlayer; i++)
                 {
                     var buster = myBusters[i];
@@ -153,6 +154,7 @@ namespace Klee
                                 sqrDist <= MAX_GHOST_DIST_SQR)
                             {
                                 Console.WriteLine($"BUST {hunterBustingGhost.Id}");
+                                isBusting = true;
                             }
                             else
                             {
@@ -208,18 +210,8 @@ namespace Klee
                             notStallingGhosts.Add(trapGhost);
                             Console.WriteLine($"TRAP {trapGhost.Id}");
                             continue;
-                        }
+                        }                       
                        
-                        //ловим свободных со стаминой 0
-                        //var zeroStaminaGhost = _ghosts.Where(g => g.State == 0)
-                        //    .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
-                        //if (zeroStaminaGhost != null)
-                        //{
-                        //    notStallingGhosts.Add(zeroStaminaGhost);
-                        //    var movingPoint = GetBustTrapPointNew(buster, zeroStaminaGhost, false);
-                        //    Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
-                        //    continue;
-                        //}
 
                         var bustingGhosts = _ghosts.Where(g => g.State == 0 || IsBustingGhost(g));
                         Entity minTrapTimeGhost = null;
@@ -265,7 +257,10 @@ namespace Klee
                             var trapPointDist = MathHelper.GetDist(buster.Point, trapPoint);
                             var trapTime = Convert.ToInt32(Math.Ceiling(trapPointDist / BUSTER_SPEED));
 
-                            if (bustingTime <= 2 || trapTime >= bustingTime)
+                            if (isBusting || 
+                                MathHelper.GetSqrDist(myBusters[0], hunterBustingGhost) <=
+                                MathHelper.GetSqrDist(buster, hunterBustingGhost) 
+                                || bustingTime <= 2 || trapTime >= bustingTime)
                             {
                                 notStallingGhosts.Add(hunterBustingGhost);
                                 Console.WriteLine($"MOVE {trapPoint.X} {trapPoint.Y}");
@@ -274,24 +269,28 @@ namespace Klee
                         }
 
 
-                        var stallGhost = GetStallingGhost(buster, notStallingGhosts, myBusters, oppBusters);
-                        if (stallGhost != null) //загоняем призраков
-                        {
-                            notStallingGhosts.Add(stallGhost);
-                            var stallPoint = GetStallPoint(stallGhost);
-                            Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB1");
-                            continue;
-                        }
+                        //var stallGhost = GetStallingGhost(buster, notStallingGhosts, myBusters, oppBusters);
+                        //if (stallGhost != null) //загоняем призраков
+                        //{
+                        //    notStallingGhosts.Add(stallGhost);
+                        //    var stallPoint = GetStallPoint(stallGhost);
+                        //    Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB1");
+                        //    continue;
+                        //}
 
-                        if (_supportStartPathIndex < _supportStartPath.Count)
+                        if (_supportStartPathIndex < _supportStartPath.Count && !_ghosts.Any())
                         {
                             var x = buster.Point.X + (myTeamId == 0 ? _catcherStartX : -_catcherStartX);
                             var y = buster.Point.Y + (myTeamId == 0 ? _catcherStartY : -_catcherStartY);
                             Console.WriteLine($"MOVE {x} {y} S");
                             continue;
                         }
+                        else
+                        {
+                            Console.WriteLine($"MOVE {buster.Point.X} {buster.Point.Y} W");
+                        }
 
-                        MoveToMostFogPosition();
+                        //MoveToMostFogPosition();
 
                     }
                     else if (i == 2)
