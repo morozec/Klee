@@ -219,7 +219,7 @@ namespace Klee
                         if (_currStunDelay == 0 && stunOppBuster != null)
                         {
                             Console.WriteLine($"STUN {stunOppBuster.Id}");
-                            _currStunDelay = STUN_DELAY + 1;
+                            _currStunDelay = STUN_DELAY;
                             continue;
                         }
 
@@ -233,13 +233,13 @@ namespace Klee
                         
                         if (oppCatcher != null) //move to opp catcher
                         {
-                            Console.WriteLine($"MOVE {oppCatcher.Point.X} {oppCatcher.Point.Y}");
+                            Console.WriteLine($"MOVE {oppCatcher.Point.X} {oppCatcher.Point.Y} sd={_currStunDelay}");
                             continue;
                         }
 
                         var waitCatcherX = myTeamId == 0 ? WIDTH - VISIBLE_RANGE : VISIBLE_RANGE;
                         var waitCatcherY = myTeamId == 0 ? HEIGHT - VISIBLE_RANGE : VISIBLE_RANGE;
-                        Console.WriteLine($"MOVE {waitCatcherX} {waitCatcherY}");
+                        Console.WriteLine($"MOVE {waitCatcherX} {waitCatcherY} sd={_currStunDelay}");
                     }
 
 
