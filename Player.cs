@@ -299,10 +299,7 @@ namespace Klee
         private static Entity GetStallingGhost(Entity buster, IList<Entity> notStallingGhosts, IList<Entity> myBuster, IList<Entity> oppBusters)
         {
             return _ghosts.Where(g => !notStallingGhosts.Contains(g) &&
-                                      (!IsBustingGhost(g) ||
-                                       (buster.Id == 0 || buster.Id == 3) && !oppBusters.Any(b =>
-                                           b.State == 4 && MathHelper.GetSqrDist(b, g) >= MIN_GHOST_DIST_SQR &&
-                                           MathHelper.GetSqrDist(b, g) <= MAX_GHOST_DIST_SQR)) &&
+                                      (!IsBustingGhost(g) || IsBustingGhost(g) && !IsDoubleBustingGhost(g) && buster.State == 4) &&
                                       !myBuster.Any(b => b.State == 2 && MathHelper.GetSqrDist(b, g) < EPS) &&
                                       !oppBusters.Any(b => b.State == 2 && MathHelper.GetSqrDist(b, g) < EPS) &&
                                       MathHelper.GetSqrDist(_myBasePoint, g.Point) > RELEASE_DIST_SQR &&
