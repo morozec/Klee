@@ -25,6 +25,7 @@ namespace Klee
         private const int BUSTER_SPEED = 800;
         private const int GHOST_SPEED = 400;
         private const double EPS = 1E-3;
+        private const double BUST_STAMINA = 5;
 
         private const int MIN_GHOST_DIST_SQR = MIN_GHOST_DIST * MIN_GHOST_DIST;
         private const int MAX_GHOST_DIST_SQR = MAX_GHOST_DIST * MAX_GHOST_DIST;
@@ -106,11 +107,12 @@ namespace Klee
                     {
                         //истощаем ВИДИМОГО призрака (или движемся к нему, если далеко)
                         bustGhost = ghosts.Where(g => g.State > 0).OrderBy(g => GetBustTime(buster, g)).FirstOrDefault();
-                        if (bustGhost != null && StartBustGhots(bustGhost, buster, myBusters[1]))
+                        if (bustGhost != null && (buster.State <= BUST_STAMINA || StartBustGhots(bustGhost, buster, myBusters[1])))
                         {
                             notStallingGhosts.Add(bustGhost);
-                            if (MathHelper.GetSqrDist(buster, bustGhost) >= MIN_GHOST_DIST_SQR &&
-                                MathHelper.GetSqrDist(buster, bustGhost) <= MAX_GHOST_DIST_SQR)
+                            var sqrDist = MathHelper.GetSqrDist(buster, bustGhost);
+                            if (sqrDist >= MIN_GHOST_DIST_SQR &&
+                                sqrDist <= MAX_GHOST_DIST_SQR)
                             {
                                 Console.WriteLine($"BUST {bustGhost.Id}");
                             }
@@ -316,6 +318,9 @@ namespace Klee
 
         private static Point GetBustTrapPoint(Entity buster, Entity ghost)
         {
+            var sqrDist = MathHelper.GetSqrDist(buster, ghost);
+            if (sqrDist > MAX_GHOST_DIST_SQR) return ghost.Point;
+
             var vector = new Vector(ghost.Point, buster.Point);
             if (Math.Abs(vector.Length) < EPS)
                 vector.End = _basePoint;
