@@ -476,7 +476,7 @@ namespace Klee
                 foreach (var buster in myBusters)
                 {
                     var dist = MathHelper.GetSqrDist(buster, ghost);
-                    if (dist <= (VISIBLE_RANGE - GHOST_SPEED) * (VISIBLE_RANGE - GHOST_SPEED))
+                    if (dist <= (VISIBLE_RANGE - 1.5 * GHOST_SPEED) * (VISIBLE_RANGE - 1.5 * GHOST_SPEED))
                     {
                         isVisible = true;
                         break;
