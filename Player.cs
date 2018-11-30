@@ -307,7 +307,8 @@ namespace Klee
                                       !oppBusters.Any(b => b.State == 2 && MathHelper.GetSqrDist(b, g) < EPS) &&
                                       MathHelper.GetSqrDist(_myBasePoint, g.Point) > RELEASE_DIST_SQR &&
                                       MathHelper.GetSqrDist(g.Point, WIDTH, 0) > 100 * 100 &&
-                                      MathHelper.GetSqrDist(g.Point, 0, HEIGHT) > 100 * 100)
+                                      MathHelper.GetSqrDist(g.Point, 0, HEIGHT) > 100 * 100 &&
+                                      MathHelper.GetSqrDist(g.Point, _oppBasePoint) > 100 * 100)
                 .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
         }
 
