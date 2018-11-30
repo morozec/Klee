@@ -373,7 +373,7 @@ namespace Klee
             {
                 if (MathHelper.GetSqrDist(catcher.Point, _myBasePoint) <= RELEASE_DIST_SQR)
                 {
-                    var catchPoint = GetBustTrapPointNew(catcher.Point, ghost, false, true);
+                    var catchPoint = GetBustTrapPointNew(catcher.Point, ghost, true, true);
                     var dist = MathHelper.GetDist(catcher.Point, catchPoint);
                     catchTime = Convert.ToInt32(Math.Ceiling(dist / BUSTER_SPEED));
                 }
@@ -384,14 +384,14 @@ namespace Klee
                     var multVector = MathHelper.GetMultVector(vector, coeff);
                     catchTime = Convert.ToInt32(Math.Ceiling(multVector.Length / BUSTER_SPEED));
 
-                    var catchPoint = GetBustTrapPointNew(multVector.End, ghost, false, true);
+                    var catchPoint = GetBustTrapPointNew(multVector.End, ghost, true, true);
                     var dist = MathHelper.GetDist(catcher.Point, catchPoint);
                     catchTime += Convert.ToInt32(Math.Ceiling(dist / BUSTER_SPEED));
                 }
             }
             else
             {
-                var catchPoint = GetBustTrapPointNew(catcher.Point, ghost, false, true);
+                var catchPoint = GetBustTrapPointNew(catcher.Point, ghost, true, true);
                 var dist = MathHelper.GetDist(catcher.Point, catchPoint);
                 catchTime = Convert.ToInt32(Math.Ceiling(dist / BUSTER_SPEED));
             }
