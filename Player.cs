@@ -32,6 +32,7 @@ namespace Klee
 
         private static IList<Entity> _ghosts = new List<Entity>();
         private static IList<Entity> _prevStepGhosts = new List<Entity>();
+        private static Point _basePoint = null;
 
         static void Main(string[] args)
         {
@@ -43,7 +44,7 @@ namespace Klee
                     .ReadLine()); // if this is 0, your base is on the top left of the map, if it is one, on the bottom right
             var oppTeamId = myTeamId == 0 ? 1 : 0;
 
-            var basePoint = myTeamId == 0 ? new Point(0, 0) : new Point(WIDTH - 1, HEIGHT - 1);
+            _basePoint = myTeamId == 0 ? new Point(0, 0) : new Point(WIDTH - 1, HEIGHT - 1);
             var addOppId = myTeamId == 0 ? 3 : 0;
 
             // game loop
@@ -123,8 +124,8 @@ namespace Klee
                        */
 
 
-                        bustGhost = _ghosts.Where(g => g.State > 0).OrderBy(g => GetBustTime(buster, g, basePoint)).FirstOrDefault();
-                        if (bustGhost != null)
+                        bustGhost = _ghosts.Where(g => g.State > 0).OrderBy(g => GetBustTime(buster, g)).FirstOrDefault();
+                        if (bustGhost != null && StartBustGhots(bustGhost, buster, myBusters[1]))
                         {
                             if (MathHelper.GetSqrDist(buster, bustGhost) >= MIN_GHOST_DIST_SQR &&
                                 MathHelper.GetSqrDist(buster, bustGhost) <= MAX_GHOST_DIST_SQR)
@@ -133,17 +134,18 @@ namespace Klee
                             }
                             else
                             {
-                                var movingPoint = GetBustTrapPoint(buster, bustGhost, basePoint);
+                                var movingPoint = GetBustTrapPoint(buster, bustGhost);
                                 Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
                             }
                             continue;
                         }
 
-                        var stallGhost = _ghosts.Where(g => g.State == 0 && MathHelper.GetSqrDist(basePoint, g.Point) > RELEASE_DIST_SQR)
+                        //загоняем призраков
+                        var stallGhost = _ghosts.Where(g => MathHelper.GetSqrDist(_basePoint, g.Point) > RELEASE_DIST_SQR)
                             .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
                         if (stallGhost != null)
                         {
-                            var stallPoint = GetStallPoint(stallGhost, basePoint);
+                            var stallPoint = GetStallPoint(stallGhost);
                             Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB");
                             continue;
                         }
@@ -155,7 +157,7 @@ namespace Klee
                     {
                         if (buster.State == 1) //carrying a ghost
                         {
-                            var baseSqrDist = MathHelper.GetSqrDist(buster.Point, basePoint);
+                            var baseSqrDist = MathHelper.GetSqrDist(buster.Point, _basePoint);
                             if (baseSqrDist <= RELEASE_DIST_SQR)
                             {
                                 Console.WriteLine("RELEASE");
@@ -163,7 +165,7 @@ namespace Klee
                             }
                             else //move to base
                             {
-                                Console.WriteLine($"MOVE {basePoint.X} {basePoint.Y}");
+                                Console.WriteLine($"MOVE {_basePoint.X} {_basePoint.Y}");
                             }
                             continue;
                         }
@@ -187,7 +189,7 @@ namespace Klee
                             .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
                         if (zeroStaminaGhost != null)
                         {
-                            var movingPoint = GetBustTrapPoint(buster, zeroStaminaGhost, basePoint);
+                            var movingPoint = GetBustTrapPoint(buster, zeroStaminaGhost);
                             Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
                             continue;
                         }
@@ -195,7 +197,7 @@ namespace Klee
                         // move to trap point
                         if (bustGhost != null)
                         {
-                            var movingPoint = GetBustTrapPoint(buster, bustGhost, basePoint);
+                            var movingPoint = GetBustTrapPoint(buster, bustGhost);
                             Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
                             continue;
                         }
@@ -241,17 +243,17 @@ namespace Klee
                         }
                         
 
-                        var stallGhost = _ghosts.Where(g => g.State == 0 && MathHelper.GetSqrDist(basePoint, g.Point) > RELEASE_DIST_SQR)
+                        var stallGhost = _ghosts.Where(g => g.State == 0 && MathHelper.GetSqrDist(_basePoint, g.Point) > RELEASE_DIST_SQR)
                             .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
                         if (stallGhost == null)
                         {
-                            stallGhost = _ghosts.Where(g => !IsBustingGhost(g) && MathHelper.GetSqrDist(basePoint, g.Point) > RELEASE_DIST_SQR)
+                            stallGhost = _ghosts.Where(g => !IsBustingGhost(g) && MathHelper.GetSqrDist(_basePoint, g.Point) > RELEASE_DIST_SQR)
                                 .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault(); 
                         }
 
                         if (stallGhost != null)
                         {
-                            var stallPoint = GetStallPoint(stallGhost, basePoint);
+                            var stallPoint = GetStallPoint(stallGhost);
                             Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB");
                             continue;
                         }
@@ -268,9 +270,21 @@ namespace Klee
             }
         }
 
-        private static Point GetStallPoint(Entity ghost, Point basePoint)
+        private static bool StartBustGhots(Entity ghost, Entity hunter, Entity catcher)
         {
-            var vector = new Vector(basePoint, ghost.Point);
+            if (catcher.State == 1) return false;
+            var catchPoint = GetBustTrapPoint(catcher, ghost);
+            var dist = MathHelper.GetDist(catcher.Point, catchPoint);
+            var catchTime = dist / BUSTER_SPEED;
+            if (catcher.State != 3) catchTime += catcher.Value;
+
+            var bustTime = GetBustTime(hunter, ghost);
+            return catchTime <= bustTime;
+        }
+
+        private static Point GetStallPoint(Entity ghost)
+        {
+            var vector = new Vector(_basePoint, ghost.Point);
             var coeff = (vector.Length + 800d) / vector.Length;
             var multVector = MathHelper.GetMultVector(vector, coeff);
             return multVector.End;
@@ -301,11 +315,11 @@ namespace Klee
             return orderedOkDistGhosts.FirstOrDefault();
         }
 
-        private static Point GetBustTrapPoint(Entity buster, Entity ghost, Point basePoint)
+        private static Point GetBustTrapPoint(Entity buster, Entity ghost)
         {
             var vector = new Vector(ghost.Point, buster.Point);
             if (Math.Abs(vector.Length) < EPS)
-                vector.End = basePoint;
+                vector.End = _basePoint;
             if (Math.Abs(vector.Length) < EPS)
                 vector.End = new Point(WIDTH / 2, HEIGHT / 2);
 
@@ -369,11 +383,16 @@ namespace Klee
             }
         }
 
-        private static int GetBustTime(Entity buster, Entity ghost, Point basePoint)
+        private static int GetBustTime(Entity buster, Entity ghost)
         {
-            var bustPoint = GetBustTrapPoint(buster, ghost, basePoint);
-            var dist = MathHelper.GetDist(buster.Point, bustPoint);
-            var time = Convert.ToInt32(dist / BUSTER_SPEED);
+            int time = 0;
+            var sqrDistFromBuster = MathHelper.GetSqrDist(buster, ghost);
+            if (sqrDistFromBuster < MIN_GHOST_DIST_SQR || sqrDistFromBuster > MAX_GHOST_DIST_SQR)
+            {
+                var bustPoint = GetBustTrapPoint(buster, ghost);
+                var dist = MathHelper.GetDist(buster.Point, bustPoint);
+                time += Convert.ToInt32(dist / BUSTER_SPEED);
+            }
             time += ghost.State;
             return time;
         }
