@@ -131,6 +131,7 @@ namespace Klee
 
                     if (i == 0)
                     {
+#if !DEBUG
                         if (_supportStartPathIndex < 2)
                         {
                             var x = buster.Point.X + (myTeamId == 0 ? _hunterStartX : -_hunterStartX);
@@ -138,6 +139,7 @@ namespace Klee
                             Console.WriteLine($"MOVE {x} {y} S");
                             continue;
                         }
+#endif
 
                         //истощаем призрака (или движемся к нему, если далеко)
                         //hunterBustingGhost = ghosts.Where(g => g.State > 0 &&
@@ -483,7 +485,13 @@ namespace Klee
            
             if (dist >= MIN_GHOST_DIST && dist <= MAX_GHOST_DIST)
             {
-                return busterPoint;
+                if (isCatcher)
+                    return busterPoint;
+                var vector = new Vector(_myBasePoint, ghost.Point);
+                var coeff = (vector.Length + 1350) / vector.Length;
+                var multVector = MathHelper.GetMultVector(vector, coeff);
+                return multVector.End;
+
             }
             else if (dist < MIN_GHOST_DIST)
             {
