@@ -126,9 +126,7 @@ namespace Klee
                         }
 
                         //загоняем призраков
-                        var stallGhost = _ghosts.Where(g => !notStallingGhosts.Contains(g) &&
-                                !IsBustingGhost(g) && MathHelper.GetSqrDist(_basePoint, g.Point) > RELEASE_DIST_SQR)
-                            .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
+                        var stallGhost = GetStallingGhost(buster, notStallingGhosts, myBusters, oppBusters);
                         if (stallGhost != null)
                         {
                             notStallingGhosts.Add(stallGhost);
@@ -192,10 +190,7 @@ namespace Klee
                                 continue;
                             }
                             
-                            var stallGhost = _ghosts.Where(g => !notStallingGhosts.Contains(g) &&
-                                    !IsBustingGhost(g) && MathHelper.GetSqrDist(_basePoint, g.Point) >
-                                    RELEASE_DIST_SQR)
-                                .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
+                            var stallGhost = GetStallingGhost(buster, notStallingGhosts, myBusters, oppBusters);
                             if (stallGhost != null) //загоняем призраков
                             {
                                 notStallingGhosts.Add(stallGhost);
@@ -227,8 +222,6 @@ namespace Klee
                             _isRadarUsed = true;
                             continue;
                         }
-
-
                        
                         var oppHunter = oppBusters.SingleOrDefault(b => b.Id == 0 + addOppId);
                         var oppCatcher = oppBusters.SingleOrDefault(b => b.Id == 1 + addOppId);
@@ -240,17 +233,7 @@ namespace Klee
                             continue;
                         }
                         
-
-                        var stallGhost = _ghosts.Where(g => g.State == 0 && MathHelper.GetSqrDist(_basePoint, g.Point) > RELEASE_DIST_SQR)
-                            .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
-                        if (stallGhost == null)
-                        {
-                            stallGhost = _ghosts.Where(g =>
-                                    !notStallingGhosts.Contains(g) && !IsBustingGhost(g) &&
-                                    MathHelper.GetSqrDist(_basePoint, g.Point) > RELEASE_DIST_SQR)
-                                .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
-                        }
-
+                        var stallGhost = GetStallingGhost(buster, notStallingGhosts, myBusters, oppBusters);
                         if (stallGhost != null)
                         {
                             notStallingGhosts.Add(stallGhost);
@@ -269,6 +252,18 @@ namespace Klee
                     // Third: MOVE x y | STUN id | RADAR
                 }
             }
+        }
+
+
+
+        private static Entity GetStallingGhost(Entity buster, IList<Entity> notStallingGhosts, IList<Entity> myBuster, IList<Entity> oppBusters)
+        {
+            return _ghosts.Where(g => !notStallingGhosts.Contains(g) &&
+                                      !IsBustingGhost(g) &&
+                                      !myBuster.Any(b => b.State == 2 && MathHelper.GetSqrDist(b, g) < EPS) &&
+                                      !oppBusters.Any(b => b.State == 2 && MathHelper.GetSqrDist(b, g) < EPS) &&
+                                      MathHelper.GetSqrDist(_basePoint, g.Point) > RELEASE_DIST_SQR)
+                .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
         }
 
         private static bool StartBustGhots(Entity ghost, Entity hunter, Entity catcher)
