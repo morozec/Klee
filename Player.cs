@@ -131,6 +131,14 @@ namespace Klee
 
                     if (i == 0)
                     {
+                        if (_supportStartPathIndex < 2)
+                        {
+                            var x = buster.Point.X + (myTeamId == 0 ? _hunterStartX : -_hunterStartX);
+                            var y = buster.Point.Y + (myTeamId == 0 ? _hunterStartY : -_hunterStartY);
+                            Console.WriteLine($"MOVE {x} {y} S");
+                            continue;
+                        }
+
                         //истощаем призрака (или движемся к нему, если далеко)
                         //hunterBustingGhost = ghosts.Where(g => g.State > 0 &&
                         //    MathHelper.GetSqrDist(buster, g) <= VISIBLE_RANGE_SQR &&
@@ -138,7 +146,7 @@ namespace Klee
                         //    ).OrderBy(g => GetBustTime(buster, g)).FirstOrDefault();
 
                         //if (hunterBustingGhost == null)
-                            hunterBustingGhost = _ghosts
+                        hunterBustingGhost = _ghosts
                                 .Where(g => g.State > 0 && 
                                             MathHelper.GetSqrDist(g.Point, _myBasePoint) <
                                             MathHelper.GetSqrDist(g.Point, _oppBasePoint))
@@ -188,6 +196,14 @@ namespace Klee
                     }
                     else if (i == 1)
                     {
+                        if (_supportStartPathIndex < 2)
+                        {
+                            var x = buster.Point.X + (myTeamId == 0 ? _catcherStartX : -_catcherStartX);
+                            var y = buster.Point.Y + (myTeamId == 0 ? _catcherStartY : -_catcherStartY);
+                            Console.WriteLine($"MOVE {x} {y} S");
+                            continue;
+                        }
+
                         if (buster.State == 1) //carrying a ghost
                         {
                             var baseSqrDist = MathHelper.GetSqrDist(buster.Point, _myBasePoint);
