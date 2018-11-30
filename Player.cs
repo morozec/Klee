@@ -51,6 +51,12 @@ namespace Klee
         };
         private static int _supportStartPathIndex = 0;
 
+        private static int _hunterStartX = 400;
+        private static int _hunterStartY = 400;
+
+        private static int _catcherStartX = 800;
+        private static int _catcherStartY = 0;
+
 
         static void Main(string[] args)
         {
@@ -161,6 +167,14 @@ namespace Klee
                             continue;
                         }
 
+                        if (_supportStartPathIndex < _supportStartPath.Count)
+                        {
+                            var x = buster.Point.X + (myTeamId == 0 ? _hunterStartX : -_hunterStartX);
+                            var y = buster.Point.Y + (myTeamId == 0 ? _hunterStartY : -_hunterStartY);
+                            Console.WriteLine($"MOVE {x} {y} S");
+                            continue;
+                        }
+
                         MoveToMostFogPosition();
 
                     }
@@ -260,6 +274,14 @@ namespace Klee
                             notStallingGhosts.Add(stallGhost);
                             var stallPoint = GetStallPoint(stallGhost);
                             Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB1");
+                            continue;
+                        }
+
+                        if (_supportStartPathIndex < _supportStartPath.Count)
+                        {
+                            var x = buster.Point.X + (myTeamId == 0 ? _catcherStartX : -_catcherStartX);
+                            var y = buster.Point.Y + (myTeamId == 0 ? _catcherStartY : -_catcherStartY);
+                            Console.WriteLine($"MOVE {x} {y} S");
                             continue;
                         }
 
