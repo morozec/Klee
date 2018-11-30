@@ -9,9 +9,10 @@ namespace Klee
 {
     class Player
     {
-
-        private static int _oppCatcherId = -7777;
         private static int _oppHunterId = -7777;
+        private static int _oppCatcherId = -7777;
+        private static int _oppSupportId = -7777;
+        
         private static bool _isRadarUsed = false;
         private static int _currStunDelay = 0;
         private static int _caughtGhosts = 0;
@@ -227,6 +228,12 @@ namespace Klee
                         {
                             oppCatcher = oppBusters.SingleOrDefault(b => b.State == 1 || b.State == 3);
                         }
+                        if (oppCatcher == null)
+                        {
+                            oppCatcher = oppBusters.SingleOrDefault(b =>
+                                b.Id == -7777 && _oppHunterId >= 0 && _oppSupportId >= 0);
+                        }
+
                         if (oppCatcher != null)
                         {
                             _oppCatcherId = oppCatcher.Id;
@@ -240,11 +247,29 @@ namespace Klee
                         {
                             oppHunter = oppBusters.SingleOrDefault(b => b.State == 4);
                         }
+                        if (oppHunter == null)
+                        {
+                            oppHunter = oppBusters.SingleOrDefault(b =>
+                                b.Id == -7777 &&  _oppCatcherId >= 0 && _oppSupportId >= 0);
+                        }
+
                         if (oppHunter != null)
                         {
                             _oppHunterId = oppHunter.Id;
                             Console.WriteLine($"MOVE {oppHunter.Point.X} {oppHunter.Point.Y}");
                             continue;
+                        }
+
+                        var oppSupport = oppBusters.SingleOrDefault(b => b.Id == _oppSupportId);
+                        if (oppSupport == null)
+                        {
+                            oppSupport = oppBusters.SingleOrDefault(b =>
+                                b.Id == -7777 && _oppCatcherId >= 0 && _oppHunterId >= 0);
+                        }
+
+                        if (oppSupport != null)
+                        {
+                            _oppSupportId = oppSupport.Id;
                         }
 
                         MoveToRandomPosition();
