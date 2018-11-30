@@ -97,6 +97,7 @@ namespace Klee
                 UpdateGhosts(myBusters, ghosts);
 
                 Entity bustGhost = null;
+                var stallingGhosts = new List<Entity>();
                 for (int i = 0; i < bustersPerPlayer; i++)
                 {
                     var buster = myBusters[i];
@@ -121,11 +122,12 @@ namespace Klee
                         }
 
                         //загоняем призраков
-                        var stallGhost = _ghosts.Where(g =>
+                        var stallGhost = _ghosts.Where(g => !stallingGhosts.Contains(g) &&
                                 !IsBustingGhost(g) && MathHelper.GetSqrDist(_basePoint, g.Point) > RELEASE_DIST_SQR)
                             .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
                         if (stallGhost != null)
                         {
+                            stallingGhosts.Add(stallGhost);
                             var stallPoint = GetStallPoint(stallGhost);
                             Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB0");
                             continue;
@@ -183,12 +185,13 @@ namespace Klee
                                 continue;
                             }
                             
-                            var stallGhost = _ghosts.Where(g =>
+                            var stallGhost = _ghosts.Where(g => !stallingGhosts.Contains(g) &&
                                     !IsBustingGhost(g) && MathHelper.GetSqrDist(_basePoint, g.Point) >
                                     RELEASE_DIST_SQR)
                                 .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
                             if (stallGhost != null) //загоняем призраков
                             {
+                                stallingGhosts.Add(stallGhost);
                                 var stallPoint = GetStallPoint(stallGhost);
                                 Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB1");
                                 continue;
@@ -235,12 +238,15 @@ namespace Klee
                             .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
                         if (stallGhost == null)
                         {
-                            stallGhost = _ghosts.Where(g => !IsBustingGhost(g) && MathHelper.GetSqrDist(_basePoint, g.Point) > RELEASE_DIST_SQR)
-                                .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault(); 
+                            stallGhost = _ghosts.Where(g =>
+                                    !stallingGhosts.Contains(g) && !IsBustingGhost(g) &&
+                                    MathHelper.GetSqrDist(_basePoint, g.Point) > RELEASE_DIST_SQR)
+                                .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
                         }
 
                         if (stallGhost != null)
                         {
+                            stallingGhosts.Add(stallGhost);
                             var stallPoint = GetStallPoint(stallGhost);
                             Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB2");
                             continue;
