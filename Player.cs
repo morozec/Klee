@@ -131,11 +131,17 @@ namespace Klee
                     if (i == 0)
                     {
                         //истощаем призрака (или движемся к нему, если далеко)
-                        hunterBustingGhost = _ghosts
-                            .Where(g => g.State > 0 && 
-                                        MathHelper.GetSqrDist(g.Point, _myBasePoint) <
-                                        MathHelper.GetSqrDist(g.Point, _oppBasePoint))
-                            .OrderBy(g => GetBustTime(buster, g)).FirstOrDefault();
+                        //hunterBustingGhost = ghosts.Where(g => g.State > 0 &&
+                        //    MathHelper.GetSqrDist(buster, g) <= VISIBLE_RANGE_SQR &&
+                        //     MathHelper.GetSqrDist(_myBasePoint, g.Point) <= MathHelper.GetSqrDist(_myBasePoint, buster.Point)
+                        //    ).OrderBy(g => GetBustTime(buster, g)).FirstOrDefault();
+
+                        //if (hunterBustingGhost == null)
+                            hunterBustingGhost = ghosts
+                                .Where(g => g.State > 0 && 
+                                            MathHelper.GetSqrDist(g.Point, _myBasePoint) <
+                                            MathHelper.GetSqrDist(g.Point, _oppBasePoint))
+                                .OrderBy(g => GetBustTime(buster, g)).FirstOrDefault();
 
                         if (hunterBustingGhost != null &&
                             (StartBustGhots(hunterBustingGhost, buster, myBusters[1]) ||
