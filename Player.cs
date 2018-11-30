@@ -103,8 +103,8 @@ namespace Klee
 
                     if (i == 0)
                     {
-                        //истощаем призрака (или движемся к нему, если далеко)
-                        bustGhost = _ghosts.Where(g => g.State > 0).OrderBy(g => GetBustTime(buster, g)).FirstOrDefault();
+                        //истощаем ВИДИМОГО призрака (или движемся к нему, если далеко)
+                        bustGhost = ghosts.Where(g => g.State > 0).OrderBy(g => GetBustTime(buster, g)).FirstOrDefault();
                         if (bustGhost != null && StartBustGhots(bustGhost, buster, myBusters[1]))
                         {
                             if (MathHelper.GetSqrDist(buster, bustGhost) >= MIN_GHOST_DIST_SQR &&
@@ -115,7 +115,7 @@ namespace Klee
                             else
                             {
                                 var movingPoint = GetBustTrapPoint(buster, bustGhost);
-                                Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
+                                Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y} {bustGhost.Id}");
                             }
                             continue;
                         }
