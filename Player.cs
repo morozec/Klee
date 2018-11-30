@@ -31,6 +31,7 @@ namespace Klee
         private const int RELEASE_DIST_SQR = RELEASE_DIST * RELEASE_DIST;
 
         private static IList<Entity> _ghosts = new List<Entity>();
+        private static IList<Entity> _prevStepGhosts = new List<Entity>();
 
         static void Main(string[] args)
         {
@@ -138,16 +139,12 @@ namespace Klee
                             continue;
                         }
 
-                        var moveToBaseGhost = _ghosts.Where(g => g.State == 0 && MathHelper.GetSqrDist(basePoint, g.Point) > RELEASE_DIST_SQR)
+                        var stallGhost = _ghosts.Where(g => g.State == 0 && MathHelper.GetSqrDist(basePoint, g.Point) > RELEASE_DIST_SQR)
                             .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
-                        if (moveToBaseGhost != null)
+                        if (stallGhost != null)
                         {
-                            var vector = new Vector(basePoint, moveToBaseGhost.Point);
-                            var coeff = (vector.Length + 100d) / vector.Length;
-                            var multVector = MathHelper.GetMultVector(vector, coeff);
-                            var movingPoint = multVector.End;
-
-                            Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y} GTB");
+                            var stallPoint = GetStallPoint(stallGhost, basePoint);
+                            Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB");
                             continue;
                         }
 
@@ -232,23 +229,33 @@ namespace Klee
                         }
 
 
-                        //move to opp catcher
+                       
+                        var oppHunter = oppBusters.SingleOrDefault(b => b.Id == 0 + addOppId);
                         var oppCatcher = oppBusters.SingleOrDefault(b => b.Id == 1 + addOppId);
-                        if (oppCatcher != null)
+                        var oppSupport = oppBusters.SingleOrDefault(b => b.Id == 2 + addOppId);
+                        
+                        if (oppCatcher != null) //move to opp catcher
                         {
                             Console.WriteLine($"MOVE {oppCatcher.Point.X} {oppCatcher.Point.Y}");
                             continue;
                         }
+                        
 
-                        //move to opp hunter
-                        var oppHunter = oppBusters.SingleOrDefault(b => b.Id == 0 + addOppId);
-                        if (oppHunter != null)
+                        var stallGhost = _ghosts.Where(g => g.State == 0 && MathHelper.GetSqrDist(basePoint, g.Point) > RELEASE_DIST_SQR)
+                            .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
+                        if (stallGhost == null)
                         {
-                            Console.WriteLine($"MOVE {oppHunter.Point.X} {oppHunter.Point.Y}");
+                            stallGhost = _ghosts.Where(g => !IsBustingGhost(g) && MathHelper.GetSqrDist(basePoint, g.Point) > RELEASE_DIST_SQR)
+                                .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault(); 
+                        }
+
+                        if (stallGhost != null)
+                        {
+                            var stallPoint = GetStallPoint(stallGhost, basePoint);
+                            Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB");
                             continue;
                         }
 
-                        var oppSupport = oppBusters.SingleOrDefault(b => b.Id == 2 + addOppId);
 
                         MoveToRandomPosition();
                     }
@@ -259,6 +266,14 @@ namespace Klee
                     // Third: MOVE x y | STUN id | RADAR
                 }
             }
+        }
+
+        private static Point GetStallPoint(Entity ghost, Point basePoint)
+        {
+            var vector = new Vector(basePoint, ghost.Point);
+            var coeff = (vector.Length + 800d) / vector.Length;
+            var multVector = MathHelper.GetMultVector(vector, coeff);
+            return multVector.End;
         }
 
         private static void MoveToRandomPosition()
@@ -307,6 +322,8 @@ namespace Klee
 
         private static void UpdateGhosts(IList<Entity> myBusters, IList<Entity> ghosts)
         {
+            _prevStepGhosts = _ghosts.ToList();
+
             //Remove
             for (var i = _ghosts.Count - 1; i >= 0; i--)
             {
@@ -362,7 +379,11 @@ namespace Klee
         }
 
 
-
+        private static bool IsBustingGhost(Entity ghost)
+        {
+            var prevG = _prevStepGhosts.SingleOrDefault(g => g.Id == ghost.Id);
+            return prevG != null && prevG.State - ghost.State == 1;
+        }
 
 
 
