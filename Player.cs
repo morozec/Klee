@@ -233,7 +233,7 @@ namespace Klee
                         if (minTrapTimeGhost != null) //идем ловить
                         {
                             notStallingGhosts.Add(minTrapTimeGhost);
-                            Console.WriteLine($"MOVE {minTrapTimePoint.X} {minTrapTimePoint.Y} MTP {minTrapTimeGhost.Id}");
+                            Console.WriteLine($"MOVE {minTrapTimePoint.X} {minTrapTimePoint.Y}");
                             continue;
                         }
 
@@ -248,7 +248,7 @@ namespace Klee
                             if (bustingTime <= 2 || trapTime >= bustingTime)
                             {
                                 notStallingGhosts.Add(hunterBustingGhost);
-                                Console.WriteLine($"MOVE {trapPoint.X} {trapPoint.Y} HBG");
+                                Console.WriteLine($"MOVE {trapPoint.X} {trapPoint.Y}");
                                 continue;
                             }
                         }
@@ -398,7 +398,7 @@ namespace Klee
                         minI = i;
                     }
            
-            Console.WriteLine($"MOVE {minJ * 1000} {minI * 1000}");
+            Console.WriteLine($"MOVE {minJ * 1000} {minI * 1000} EXP");
         }
 
         private static Entity GetTrapGhost(Entity buster, IList<Entity> ghosts, bool considerDist)
