@@ -158,7 +158,7 @@ namespace Klee
                             }
                             else
                             {
-                                var movingPoint = GetBustTrapPointNew(buster.Point, hunterBustingGhost, false);
+                                var movingPoint = GetBustTrapPointNew(buster.Point, hunterBustingGhost, false, false);
                                 Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y} {hunterBustingGhost.Id}");
                             }
 
@@ -228,7 +228,7 @@ namespace Klee
                                     : bg.State;
                             }
 
-                            var trapPoint = GetBustTrapPointNew(buster.Point, bg, true);
+                            var trapPoint = GetBustTrapPointNew(buster.Point, bg, true, true);
                             var trapPointDist = MathHelper.GetDist(buster.Point, trapPoint);
                             var trapTime = Convert.ToInt32(Math.Ceiling(trapPointDist / BUSTER_SPEED));
 
@@ -253,7 +253,7 @@ namespace Klee
                         {
                             var bustingTime = hunterBustingGhost.State;
 
-                            var trapPoint = GetBustTrapPointNew(buster.Point, hunterBustingGhost, true);
+                            var trapPoint = GetBustTrapPointNew(buster.Point, hunterBustingGhost, true, true);
                             var trapPointDist = MathHelper.GetDist(buster.Point, trapPoint);
                             var trapTime = Convert.ToInt32(Math.Ceiling(trapPointDist / BUSTER_SPEED));
 
@@ -267,6 +267,7 @@ namespace Klee
                                 continue;
                             }
                         }
+
 
 
                         //var stallGhost = GetStallingGhost(buster, notStallingGhosts, myBusters, oppBusters);
@@ -287,7 +288,15 @@ namespace Klee
                         }
                         else
                         {
-                            Console.WriteLine($"MOVE {buster.Point.X} {buster.Point.Y} W");
+                            var oppCarringCatcher = oppBusters.SingleOrDefault(b => b.State == 1);
+                            if (oppCarringCatcher != null)
+                            {
+                                Console.WriteLine($"MOVE {oppCarringCatcher.Point.X} {oppCarringCatcher.Point.Y} R");
+                            }
+                            else if (!_ghosts.Any())
+                                MoveToMostFogPosition();
+                            else
+                                Console.WriteLine($"MOVE {buster.Point.X} {buster.Point.Y} W");
                         }
 
                         //MoveToMostFogPosition();
@@ -364,7 +373,7 @@ namespace Klee
             {
                 if (MathHelper.GetSqrDist(catcher.Point, _myBasePoint) <= RELEASE_DIST_SQR)
                 {
-                    var catchPoint = GetBustTrapPointNew(catcher.Point, ghost, false);
+                    var catchPoint = GetBustTrapPointNew(catcher.Point, ghost, false, true);
                     var dist = MathHelper.GetDist(catcher.Point, catchPoint);
                     catchTime = Convert.ToInt32(Math.Ceiling(dist / BUSTER_SPEED));
                 }
@@ -375,14 +384,14 @@ namespace Klee
                     var multVector = MathHelper.GetMultVector(vector, coeff);
                     catchTime = Convert.ToInt32(Math.Ceiling(multVector.Length / BUSTER_SPEED));
 
-                    var catchPoint = GetBustTrapPointNew(multVector.End, ghost, false);
+                    var catchPoint = GetBustTrapPointNew(multVector.End, ghost, false, true);
                     var dist = MathHelper.GetDist(catcher.Point, catchPoint);
                     catchTime += Convert.ToInt32(Math.Ceiling(dist / BUSTER_SPEED));
                 }
             }
             else
             {
-                var catchPoint = GetBustTrapPointNew(catcher.Point, ghost, false);
+                var catchPoint = GetBustTrapPointNew(catcher.Point, ghost, false, true);
                 var dist = MathHelper.GetDist(catcher.Point, catchPoint);
                 catchTime = Convert.ToInt32(Math.Ceiling(dist / BUSTER_SPEED));
             }
@@ -448,7 +457,7 @@ namespace Klee
             return orderedOkDistGhosts.FirstOrDefault();
         }
 
-        private static Point GetBustTrapPointNew(Point busterPoint, Entity ghost, bool isStaticGhost)
+        private static Point GetBustTrapPointNew(Point busterPoint, Entity ghost, bool isStaticGhost, bool isCatcher)
         {
             var dist = MathHelper.GetDist(ghost.Point, busterPoint);
            
@@ -457,19 +466,25 @@ namespace Klee
                 return busterPoint;
             }
             else if (dist < MIN_GHOST_DIST)
-            {                
-                var vector = new Vector(busterPoint, _myBasePoint);
-                if (Math.Abs(vector.Length) < EPS)
-                    vector.End = new Point(WIDTH / 2, HEIGHT / 2);
+            {
+                if (isCatcher)
+                {
+                    var vector = new Vector(busterPoint, _myBasePoint);
+                    if (Math.Abs(vector.Length) < EPS)
+                        vector.End = new Point(WIDTH / 2, HEIGHT / 2);
 
-                var coeff = BUSTER_SPEED * 1d / vector.Length;
-                var multVector = MathHelper.GetMultVector(vector, coeff);
-                if (MathHelper.GetSqrDist(multVector.End, ghost.Point) >= MIN_GHOST_DIST_SQR)
+                    var coeff = BUSTER_SPEED * 1d / vector.Length;
+                    var multVector = MathHelper.GetMultVector(vector, coeff);
                     return multVector.End;
+                }
+                else
+                {
+                    var vector = new Vector(_myBasePoint, ghost.Point);
+                    var coeff = (vector.Length + 1350) / vector.Length;
+                    var multVector = MathHelper.GetMultVector(vector, coeff);
+                    return multVector.End;
+                }
 
-                coeff = BUSTER_SPEED * 2d / vector.Length;
-                multVector = MathHelper.GetMultVector(vector, coeff);
-                return multVector.End;                
             }
             else //dist > MAX_GHOST_DIST
             {
@@ -604,7 +619,7 @@ namespace Klee
             var sqrDistFromBuster = MathHelper.GetSqrDist(buster, ghost);
             if (sqrDistFromBuster < MIN_GHOST_DIST_SQR || sqrDistFromBuster > MAX_GHOST_DIST_SQR)
             {
-                var bustPoint = GetBustTrapPointNew(buster.Point, ghost, false);
+                var bustPoint = GetBustTrapPointNew(buster.Point, ghost, false, false);
                 var dist = MathHelper.GetDist(buster.Point, bustPoint);
                 time += Convert.ToInt32(Math.Ceiling(dist / BUSTER_SPEED));
             }
