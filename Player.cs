@@ -237,6 +237,8 @@ namespace Klee
                             continue;
                         }
 
+                        var stallGhost = GetStallingGhost(buster, notStallingGhosts, myBusters, oppBusters);
+
                         if (hunterBustingGhost != null)//идем ловить того, на кого охотится hunter
                         {
                             var bustingTime = hunterBustingGhost.State;
@@ -245,7 +247,7 @@ namespace Klee
                             var trapPointDist = MathHelper.GetDist(buster.Point, trapPoint);
                             var trapTime = Convert.ToInt32(Math.Ceiling(trapPointDist / BUSTER_SPEED));
 
-                            if (bustingTime <= 2 || trapTime >= bustingTime)
+                            if (stallGhost == null || bustingTime <= 2 || trapTime >= bustingTime)
                             {
                                 notStallingGhosts.Add(hunterBustingGhost);
                                 Console.WriteLine($"MOVE {trapPoint.X} {trapPoint.Y}");
@@ -253,8 +255,7 @@ namespace Klee
                             }
                         }
 
-
-                        var stallGhost = GetStallingGhost(buster, notStallingGhosts, myBusters, oppBusters);
+                       
                         if (stallGhost != null) //загоняем призраков
                         {
                             notStallingGhosts.Add(stallGhost);
