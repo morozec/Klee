@@ -200,13 +200,13 @@ namespace Klee
                     }
                     else if (i == 1)
                     {
-                        //if (_supportStartPathIndex < 2)
-                        //{
-                        //    var x = buster.Point.X + (myTeamId == 0 ? _catcherStartX : -_catcherStartX);
-                        //    var y = buster.Point.Y + (myTeamId == 0 ? _catcherStartY : -_catcherStartY);
-                        //    Console.WriteLine($"MOVE {x} {y} S");
-                        //    continue;
-                        //}
+                        if (_supportStartPathIndex < 2)
+                        {
+                            var x = buster.Point.X + (myTeamId == 0 ? _catcherStartX : -_catcherStartX);
+                            var y = buster.Point.Y + (myTeamId == 0 ? _catcherStartY : -_catcherStartY);
+                            Console.WriteLine($"MOVE {x} {y} S");
+                            continue;
+                        }
 
                         if (buster.State == 1) //carrying a ghost
                         {
@@ -239,14 +239,14 @@ namespace Klee
                         var minTime = int.MaxValue;
                         foreach (var bg in bustingGhosts)
                         {
-                            //int bustingTime;
-                            //if (bg.State == 0) bustingTime = 0;
-                            //else
-                            //{
-                            //    bustingTime = IsDoubleBustingGhost(bg)
-                            //        ? Convert.ToInt32(Math.Ceiling(bg.State / 2d))
-                            //        : bg.State;
-                            //}
+                            int bustingTime;
+                            if (bg.State == 0) bustingTime = 0;
+                            else
+                            {
+                                bustingTime = IsDoubleBustingGhost(bg)
+                                    ? Convert.ToInt32(Math.Ceiling(bg.State / 2d))
+                                    : bg.State;
+                            }
 
                             var trapPoint = GetBustTrapPointNew(buster.Point, bg, true, true);
                             var trapPointDist = MathHelper.GetDist(buster.Point, trapPoint);
@@ -254,9 +254,9 @@ namespace Klee
 
                             //if (trapTime < bustingTime) continue;
 
-                            if (trapTime < minTime)
+                            if ( Math.Max(trapTime, bustingTime) < minTime)
                             {
-                                minTime = trapTime;
+                                minTime = Math.Max(trapTime, bustingTime);
                                 minTrapTimePoint = trapPoint;
                                 minTrapTimeGhost = bg;
                             }
