@@ -180,25 +180,30 @@ namespace Klee
                         }
                        
                         //ловим свободных со стаминой 0
-                        var zeroStaminaGhost = _ghosts.Where(g => g.State == 0)
-                            .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
-                        if (zeroStaminaGhost != null)
-                        {
-                            notStallingGhosts.Add(zeroStaminaGhost);
-                            var movingPoint = GetBustTrapPointNew(buster, zeroStaminaGhost, false);
-                            Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
-                            continue;
-                        }
+                        //var zeroStaminaGhost = _ghosts.Where(g => g.State == 0)
+                        //    .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
+                        //if (zeroStaminaGhost != null)
+                        //{
+                        //    notStallingGhosts.Add(zeroStaminaGhost);
+                        //    var movingPoint = GetBustTrapPointNew(buster, zeroStaminaGhost, false);
+                        //    Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
+                        //    continue;
+                        //}
 
-                        var bustingGhosts = ghosts.Where(IsBustingGhost);
+                        var bustingGhosts = _ghosts.Where(g => g.State == 0 || IsBustingGhost(g));
                         Entity minTrapTimeGhost = null;
                         Point minTrapTimePoint = null;
                         var minTime = int.MaxValue;
                         foreach (var bg in bustingGhosts)
                         {
-                            var bustingTime = IsDoubleBustingGhost(bg)
-                                ? Convert.ToInt32(Math.Ceiling(bg.State / 2d))
-                                : bg.State;
+                            int bustingTime;
+                            if (bg.State == 0) bustingTime = 0;
+                            else
+                            {
+                                bustingTime = IsDoubleBustingGhost(bg)
+                                    ? Convert.ToInt32(Math.Ceiling(bg.State / 2d))
+                                    : bg.State;
+                            }
 
                             var trapPoint = GetBustTrapPointNew(buster, bg, true);
                             var trapPointDist = MathHelper.GetDist(buster.Point, trapPoint);
@@ -355,9 +360,11 @@ namespace Klee
 
         private static Entity GetTrapGhost(Entity buster, IList<Entity> ghosts, bool considerDist)
         {
-            return ghosts.FirstOrDefault(g => g.State == 0 && (!considerDist ||
-                                                               MathHelper.GetSqrDist(buster, g) >= MIN_GHOST_DIST_SQR &&
-                                                               MathHelper.GetSqrDist(buster, g) <= MAX_GHOST_DIST_SQR));
+            return ghosts.FirstOrDefault(g =>
+                (g.State == 0 || g.State == 1 && IsBustingGhost(g) || g.State == 2 && IsDoubleBustingGhost(g)) &&
+                (!considerDist ||
+                 MathHelper.GetSqrDist(buster, g) >= MIN_GHOST_DIST_SQR &&
+                 MathHelper.GetSqrDist(buster, g) <= MAX_GHOST_DIST_SQR));
         }
 
 
