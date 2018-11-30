@@ -40,6 +40,17 @@ namespace Klee
         private static Point _oppBasePoint = null;
         private static int[,] _visibleCount = new int[9, 16];
 
+        private static IList<Point> _supportStartPath = new List<Point>
+        {
+            new Point(0, 800),
+            new Point(0, 800),
+            new Point(200, 600),
+            new Point(200, 600),
+            new Point(400, 400),
+            new Point(400, 400),            
+        };
+        private static int _supportStartPathIndex = 0;
+
 
         static void Main(string[] args)
         {
@@ -281,9 +292,19 @@ namespace Klee
                             continue;
                         }
 
-                        var waitCatcherX = myTeamId == 0 ? WIDTH - VISIBLE_RANGE : VISIBLE_RANGE;
-                        var waitCatcherY = myTeamId == 0 ? HEIGHT - VISIBLE_RANGE : VISIBLE_RANGE;
-                        Console.WriteLine($"MOVE {waitCatcherX} {waitCatcherY} sd={_currStunDelay}");
+                        if (_supportStartPathIndex < _supportStartPath.Count)
+                        {
+                            var x = buster.Point.X + _supportStartPath[_supportStartPathIndex].X * (myTeamId == 0 ? 1 : -1);
+                            var y = buster.Point.Y + _supportStartPath[_supportStartPathIndex].Y * (myTeamId == 0 ? 1 : -1);
+                            Console.WriteLine($"MOVE {x} {y} sd={_currStunDelay}");
+                            _supportStartPathIndex++;
+                        }
+                        else
+                        {
+                            var waitCatcherX = myTeamId == 0 ? WIDTH - VISIBLE_RANGE : VISIBLE_RANGE;
+                            var waitCatcherY = myTeamId == 0 ? HEIGHT - VISIBLE_RANGE : VISIBLE_RANGE;
+                            Console.WriteLine($"MOVE {waitCatcherX} {waitCatcherY} sd={_currStunDelay}");
+                        }
                     }
 
 
