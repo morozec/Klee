@@ -103,27 +103,7 @@ namespace Klee
 
                     if (i == 0)
                     {
-                        /*
-                        bustGhost = GetBustGhost(buster, ghosts);
-                        if (bustGhost != null) //got ghost to bust
-                        {
-                            Console.WriteLine($"BUST {bustGhost.Id}");
-                            continue;
-                        }
-                        */
-
-
-                        /*                       
-                       bustGhost = ghosts.Where(g => g.State > 0).OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
-                       if (bustGhost != null)//move to bust point
-                       {
-                           var movingPoint = GetBustTrapPoint(buster, bustGhost, basePoint);
-                           Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
-                           continue;
-                       }
-                       */
-
-
+                        //истощаем призрака (или движемся к нему, если далеко)
                         bustGhost = _ghosts.Where(g => g.State > 0).OrderBy(g => GetBustTime(buster, g)).FirstOrDefault();
                         if (bustGhost != null && StartBustGhots(bustGhost, buster, myBusters[1]))
                         {
@@ -146,7 +126,7 @@ namespace Klee
                         if (stallGhost != null)
                         {
                             var stallPoint = GetStallPoint(stallGhost);
-                            Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB");
+                            Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB0");
                             continue;
                         }
 
@@ -170,21 +150,15 @@ namespace Klee
                             continue;
                         }
 
+                        //trapping a ghost
                         var trapGhost = GetTrapGhost(buster, ghosts, true);
                         if (trapGhost != null)
                         {
                             Console.WriteLine($"TRAP {trapGhost.Id}");
                             continue;
                         }
-
-                        //trapGhost = GetTrapGhost(buster, ghosts, false);
-                        //if (trapGhost != null)
-                        //{
-                        //    var movingPoint = GetBustTrapPoint(buster, bustGhost, basePoint);
-                        //    Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
-                        //    continue;
-                        //}
-
+                       
+                        //ловим свободных со стаминой 0
                         var zeroStaminaGhost = _ghosts.Where(g => g.State == 0)
                             .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
                         if (zeroStaminaGhost != null)
@@ -194,11 +168,28 @@ namespace Klee
                             continue;
                         }
 
-                        // move to trap point
                         if (bustGhost != null)
                         {
-                            var movingPoint = GetBustTrapPoint(buster, bustGhost);
-                            Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y}");
+                            var bustTime = GetBustTime(myBusters[0], bustGhost);
+
+                            var trapPoint = GetBustTrapPoint(buster, bustGhost);
+                            var trapPointDist = MathHelper.GetDist(buster.Point, trapPoint);
+                            var trapTime = trapPointDist / BUSTER_SPEED;
+
+                            if (bustTime <= trapTime) //идем ловить
+                            {
+                                Console.WriteLine($"MOVE {trapPoint.X} {trapPoint.Y}");
+                            }
+                            else //загоняем призраков
+                            {
+                                var stallGhost = _ghosts.Where(g => MathHelper.GetSqrDist(_basePoint, g.Point) > RELEASE_DIST_SQR)
+                                    .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
+                                if (stallGhost != null)
+                                {
+                                    var stallPoint = GetStallPoint(stallGhost);
+                                    Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB1");
+                                }
+                            }
                             continue;
                         }
 
@@ -254,7 +245,7 @@ namespace Klee
                         if (stallGhost != null)
                         {
                             var stallPoint = GetStallPoint(stallGhost);
-                            Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB");
+                            Console.WriteLine($"MOVE {stallPoint.X} {stallPoint.Y} GTB2");
                             continue;
                         }
 
@@ -292,6 +283,7 @@ namespace Klee
 
         private static void MoveToRandomPosition()
         {
+            //TODO!!! Move clever!
             var x = _rnd.Next(WIDTH);
             var y = _rnd.Next(HEIGHT);
             Console.WriteLine($"MOVE {x} {y}");
