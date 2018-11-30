@@ -120,7 +120,9 @@ namespace Klee
                                         MathHelper.GetSqrDist(g.Point, _oppBasePoint))
                             .OrderBy(g => GetBustTime(buster, g)).FirstOrDefault();
 
-                        if (hunterBustingGhost != null && StartBustGhots(hunterBustingGhost, buster, myBusters[1]))
+                        if (hunterBustingGhost != null &&
+                            (StartBustGhots(hunterBustingGhost, buster, myBusters[1]) ||
+                             MathHelper.GetSqrDist(hunterBustingGhost.Point, _myBasePoint) <= RELEASE_DIST_SQR))
                         {
                             notStallingGhosts.Add(hunterBustingGhost);
                             var sqrDist = MathHelper.GetSqrDist(buster, hunterBustingGhost);
@@ -134,6 +136,7 @@ namespace Klee
                                 var movingPoint = GetBustTrapPointNew(buster, hunterBustingGhost, false);
                                 Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y} {hunterBustingGhost.Id}");
                             }
+
                             continue;
                         }
 
