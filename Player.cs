@@ -199,13 +199,7 @@ namespace Klee
                     else if (i == 2)
                     {
                         var stunOppBuster = oppBusters.SingleOrDefault(b =>
-                            (b.State == 1 || b.State == 3) && MathHelper.GetSqrDist(buster, b) <= MAX_GHOST_DIST_SQR);
-
-                        if (stunOppBuster == null)
-                        {
-                            stunOppBuster = oppBusters.SingleOrDefault(b =>
-                                b.State == 4 && MathHelper.GetSqrDist(buster, b) <= MAX_GHOST_DIST_SQR);
-                        }
+                            b.Id == 1 + addOppId && MathHelper.GetSqrDist(buster, b) <= MAX_GHOST_DIST_SQR);
 
                         if (_currStunDelay == 0 && stunOppBuster != null)
                         {
