@@ -409,19 +409,19 @@ namespace Klee
                 return busterPoint;
             }
             else if (dist < MIN_GHOST_DIST)
-            {
-                var vector = new Vector(_myBasePoint, ghost.Point);
+            {                
+                var vector = new Vector(busterPoint, _myBasePoint);
                 if (Math.Abs(vector.Length) < EPS)
-                    vector.Start = new Point(WIDTH / 2, HEIGHT / 2);
+                    vector.End = new Point(WIDTH / 2, HEIGHT / 2);
 
-                var minVectorCoeff = (vector.Length + MIN_GHOST_DIST * 1d) / vector.Length;
-                var minVector = MathHelper.GetMultVector(vector, minVectorCoeff);
+                var coeff = BUSTER_SPEED * 1d / vector.Length;
+                var multVector = MathHelper.GetMultVector(vector, coeff);
+                if (MathHelper.GetSqrDist(multVector.End, ghost.Point) >= MIN_GHOST_DIST_SQR)
+                    return multVector.End;
 
-                var maxVectorCoeff = (vector.Length + MAX_GHOST_DIST * 1d) / vector.Length;
-                var maxVector = MathHelper.GetMultVector(vector, maxVectorCoeff);
-
-                var movingPoint = MathHelper.GetMiddlePoint(minVector.End, maxVector.End);
-                return movingPoint;
+                coeff = BUSTER_SPEED * 2d / vector.Length;
+                multVector = MathHelper.GetMultVector(vector, coeff);
+                return multVector.End;                
             }
             else //dist > MAX_GHOST_DIST
             {
