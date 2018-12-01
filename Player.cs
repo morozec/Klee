@@ -387,7 +387,9 @@ namespace Klee
                                       MathHelper.GetSqrDist(_myBasePoint, g.Point) > RELEASE_DIST_SQR &&
                                       MathHelper.GetSqrDist(g.Point, WIDTH, 0) > 100 * 100 &&
                                       MathHelper.GetSqrDist(g.Point, 0, HEIGHT) > 100 * 100 &&
-                                      MathHelper.GetSqrDist(g.Point, _oppBasePoint) > 100 * 100)
+                                      MathHelper.GetSqrDist(g.Point, _oppBasePoint) > 100 * 100 &&
+                                       Math.Abs(_myBasePoint.Y - g.Point.Y) < HEIGHT - 100 &&
+                                      Math.Abs(_myBasePoint.X - g.Point.X) < WIDTH - 100)
                 .OrderBy(g => MathHelper.GetSqrDist(buster, g)).FirstOrDefault();
         }
 
