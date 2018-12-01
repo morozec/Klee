@@ -493,6 +493,8 @@ namespace Klee
                 var vector = new Vector(_myBasePoint, ghost.Point);
                 var coeff = (vector.Length + 1350) / vector.Length;
                 var multVector = MathHelper.GetMultVector(vector, coeff);
+
+
                 return multVector.End;
 
             }
@@ -506,14 +508,37 @@ namespace Klee
 
                     var coeff = BUSTER_SPEED * 1d / vector.Length;
                     var multVector = MathHelper.GetMultVector(vector, coeff);
-                    return multVector.End;
+
+                    if (multVector.End.X < 0 || multVector.End.Y < 0 || multVector.End.X > WIDTH || multVector.End.Y > HEIGHT)
+                    {
+                        var vector2 = new Vector(busterPoint, _myBasePoint);
+                        if (Math.Abs(vector2.Length) < EPS)
+                            vector2.End = new Point(WIDTH / 2, HEIGHT / 2);
+
+                        var coeff2 = BUSTER_SPEED * 1d / vector2.Length;
+                        var multVector2 = MathHelper.GetMultVector(vector2, coeff2);
+                        return multVector2.End;
+                    }
+                    else
+                        return multVector.End;
                 }
                 else
                 {
                     var vector = new Vector(_myBasePoint, ghost.Point);
                     var coeff = (vector.Length + 1350) / vector.Length;
                     var multVector = MathHelper.GetMultVector(vector, coeff);
-                    return multVector.End;
+                    if (multVector.End.X < 0 || multVector.End.Y < 0 || multVector.End.X > WIDTH || multVector.End.Y >HEIGHT)
+                    {
+                        var vector2 = new Vector(busterPoint, _myBasePoint);
+                        if (Math.Abs(vector2.Length) < EPS)
+                            vector2.End = new Point(WIDTH / 2, HEIGHT / 2);
+
+                        var coeff2 = BUSTER_SPEED * 1d / vector2.Length;
+                        var multVector2 = MathHelper.GetMultVector(vector2, coeff2);
+                        return multVector2.End;
+                    }
+                    else
+                        return multVector.End;
                 }
 
             }
