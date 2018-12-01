@@ -171,14 +171,15 @@ namespace Klee
                             {
                                 Console.WriteLine($"BUST {hunterBustingGhost.Id}");
                                 isBusting = true;
+                                continue;
                             }
-                            else
+                            if (!IsBustingGhost(hunterBustingGhost) || buster.State == 4)
                             {
                                 var movingPoint = GetBustTrapPointNew(buster.Point, hunterBustingGhost, false, false);
                                 Console.WriteLine($"MOVE {movingPoint.X} {movingPoint.Y} {hunterBustingGhost.Id}");
+                                continue;
                             }
-
-                            continue;
+                            
                         }
 
                         //загоняем призраков
